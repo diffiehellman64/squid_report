@@ -101,7 +101,7 @@ function get_csv ($arr, $csvfilename){
 		$line .= $monitor[$i].';';
 	}
 	$fp = fopen($csvfilename, "w");
-	fputs ($fp, $time_str[0] ." - ". $time_str[1] ."\n");
+	fputs ($fp, "Log period: ".date("d/m/Y", $time_str[0]) ." - ". date("d/m/Y", $time_str[1]) ."\n");
 	fputs ($fp, $line ."\n");
 	foreach ($arr as $user => $visits){
         	$line = $users[$user].';'.$user.';';
@@ -195,8 +195,8 @@ function show_progress($count, $current_line){
 
 function get_time_pool($time){
 	global $time_str;
-	if ($time_str[0] < $time) {$time_str[0] = $time;}
-	if ($time_str[1] > $time) {$time_str[1] = $time;}
+	if ($time_str[0] > $time) {$time_str[0] = $time;}
+	if ($time_str[1] < $time) {$time_str[1] = $time;}
 }
 
 function get_result($logfile){
@@ -204,7 +204,7 @@ function get_result($logfile){
 	global $monitor;
         global $show_prg;
 	global $time_str;
-	$time_str[0] = 0;
+	$time_str[0] = 9999999999;
 	$time_str[1] = 0;
 	$current_line = 0;
         $show_prg = 0;
@@ -220,26 +220,29 @@ function get_result($logfile){
 			$tmp = split('"', $buffer);
 			$l = trim($tmp[0]);
 			$line = preg_split('/ +/', $l);
-			get_time_pool($line[0]);
-			preg_match('/^([^@]+)/', $line[7], $matches);
-			$user = $matches[1];
-			if (isset($users[$user])){
-				$url = get_clen_baseurl($line[6]);
-	
-				if (!in_array($url, $monitor)){
-					$url = 'other';
-				}
+			if ($line[5] == 'GET' && $line[9] == 'text/html'){
+		//	print_r ($line);
+				get_time_pool($line[0]);
+				preg_match('/^([^@]+)/', $line[7], $matches);
+				$user = $matches[1];
+				if (isset($users[$user])){
+					$url = get_clen_baseurl($line[6]);
+		
+					if (!in_array($url, $monitor)){
+						$url = 'other';
+					}
 
-				if (!isset ($result[$user])){
-					$result[$user] = array();
-				}
+					if (!isset ($result[$user])){
+						$result[$user] = array();
+					}
         
-				if (!isset ($result[$user][$url])){
-        		        	$result[$user][$url] = 0;
-		        	}
-				$result[$user][$url]++;
-			} else {
-//				echo $buffer;
+					if (!isset ($result[$user][$url])){
+        			        	$result[$user][$url] = 0;
+			        	}
+					$result[$user][$url]++;
+				} else {
+	//				echo $buffer;
+				}
 			}
     		}
 		if (!feof($handle)) {

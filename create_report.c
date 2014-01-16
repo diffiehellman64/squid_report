@@ -14,13 +14,15 @@ int main (int argc, char* argv[])
 char* split (char* str)
 {
 	int i = 0;
-	char* result[10];
+	char* result;
 	char* cell;
+	result = (char*) malloc(10*sizeof(char));
 	cell = strtok(str, " ");
 	while (cell != NULL)
         {
         	++i;
-		result[i] = cell;
+	//	printf("%s\n", cell);
+		result[i] = *cell;
                 cell = strtok(NULL, " ");
         }
 	return result;
@@ -32,10 +34,16 @@ void parse_log (char* logfile)
 	char result_sting[200]; 
 	file = fopen(logfile,"r");
  	char* parsed;
+	int i;
 	while(fgets(result_sting, sizeof(result_sting), file))
 	{
 		parsed = split (result_sting);	
-		split (result_sting);	
+		for (i=0; i<=10; ++i){
+			if (parsed[i])
+				printf("%d\n", parsed[i]);
+		}
+		printf("%s", "\n\n");
+//		split (result_sting);	
 	}
 	fclose(file);
 }
