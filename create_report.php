@@ -2,7 +2,7 @@
 function get_users($org){
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';
-        $ldappass = 'H0Lly$hit';
+        $ldappass = $argv[4];
         $ldaptree = "OU=Users,OU=".$org.",OU=Resources,DC=rk,DC=local";
 
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -30,7 +30,7 @@ function get_users($org){
 function get_user_fio($user){
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';
-        $ldappass = 'H0Lly$hit';
+        $ldappass = $argv[4];
         $ldaptree = "OU=Resources,DC=rk,DC=local";
 
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
