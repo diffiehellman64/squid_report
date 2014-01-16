@@ -1,8 +1,9 @@
 <?php
 function get_users($org){
+	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';
-        $ldappass = $argv[4];
+        $ldappass = $pass;
         $ldaptree = "OU=Users,OU=".$org.",OU=Resources,DC=rk,DC=local";
 
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -28,9 +29,10 @@ function get_users($org){
 }
 
 function get_user_fio($user){
+	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';
-        $ldappass = $argv[4];
+        $ldappass = $pass;
         $ldaptree = "OU=Resources,DC=rk,DC=local";
 
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -54,9 +56,10 @@ function get_user_fio($user){
 }
 
 function get_org($user){
+	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';
-        $ldappass = 'H0Lly$hit';
+        $ldappass = $pass;
         $ldaptree = "OU=Resources,DC=rk,DC=local";
 
         $ldapconn = ldap_connect($ldapserver) or die("Could not connect to LDAP server.");
@@ -305,6 +308,7 @@ function get_global_result($logfile){
 $input = $argv[1];
 $output = $argv[2];
 $org = $argv[3];
+$pass = $argv[4];
 
 if (isset($input) && isset($output) && isset($org)){
 	$monitor = get_sites('monitor_sites.list');
