@@ -2,48 +2,66 @@
 #include <string.h>
 #include <stdlib.h>
 
-void parse_log (char* logfile);
-char* split (char* str);
+#define N_FIELDS 10
 
-int main (int argc, char* argv[])
+void parse_log(char *logfile);
+char** split(char *str);
+
+int main(int argc, char* argv[])
 {
-	parse_log (argv[1]);
+	if (argc > 1)
+		parse_log(argv[1]);
+
 	return 0;
 }
 
-char* split (char* str)
+char** split(char* str)
 {
 	int i = 0;
-	char* result;
-	char* cell;
-	result = (char*) malloc(10*sizeof(char));
+	char **result;
+	char *cell;
+
+	//вообще хорошей практикой является избавление кода от "магических" констант
+	//Например можно было создать глобальную переменную или определить
+	//#define N_FIELDS 10 чтобы код выглядел читабельно
+	result = malloc(N_FIELDS * sizeof(char *));
+	memset(result, 0, N_FIELDS * sizeof(char *));
+
 	cell = strtok(str, " ");
-	while (cell != NULL)
-        {
-        	++i;
-	//	printf("%s\n", cell);
-		result[i] = *cell;
-                cell = strtok(NULL, " ");
-        }
+
+	//надо вставлять проверки на выход из границ массива что бы не было мучительно больно
+	while (cell != NULL && i < N_FIELDS) {
+		//инкремент после присваивания
+		result[i++] = cell;
+		cell = strtok(NULL, " ");
+	}
+
 	return result;
 }
 
 void parse_log (char* logfile)
 {
-	FILE *file; 
-	char result_sting[200]; 
+	FILE *file;
+	int i, sz;
+	char *result_string;
+	//parsed это массив указателей на строку
+	char** parsed;
+
 	file = fopen(logfile,"r");
- 	char* parsed;
-	int i;
-	while(fgets(result_sting, sizeof(result_sting), file))
-	{
-		parsed = split (result_sting);	
-		for (i=0; i<=10; ++i){
+	result_string = NULL;
+	//когда первый аргумент getline = NULL функция сама выделяет сколько нужно памяти.
+	while(getline(&result_string, &sz, file) > 0) {
+		parsed = split (result_string);
+		for (i=0; i < N_FIELDS; ++i) {
 			if (parsed[i])
-				printf("%d\n", parsed[i]);
+				printf("%s ||", parsed[i]);
 		}
+		//\n можно пихать и в саму форматную строку, выглядит понятнее
 		printf("%s", "\n\n");
-//		split (result_sting);	
+		//обязательно освобождай память после использования
+		free(result_string);
+		free(parsed);
+		result_string = NULL;
 	}
 	fclose(file);
 }
