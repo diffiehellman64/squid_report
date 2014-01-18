@@ -48,12 +48,12 @@ void parse_log (char* logfile)
 //	char** user;
 	char* pattern;
 	pattern = "([^@]+)@(.*)";
-	int i = 0;
+	int i = 1;
 	//char* site;
 	file = fopen(logfile,"r");
 	result_string = NULL;
 	while(getline(&result_string, &sz, file) > 0) {
-//		printf("str = %d\n", i++);
+//		printf("str = %d\n", i);
 		parsed = split (result_string);
 	//	user = parsed[7];
 	//	site = parsed[6];
@@ -66,6 +66,7 @@ void parse_log (char* logfile)
 	//	free(user);
 		free(parsed);
 		result_string = NULL;
+//		i++;
 	}
 	fclose(file);
 }
@@ -95,20 +96,21 @@ int preg_match(char* src, char* pattern, int field_count)
    res = regexec(&preg, src, 10, pmatch, REG_NOTBOL);
    if(res == REG_NOMATCH)
    {
-      printf("NO match\n");
+//      printf("NO match\n");
       return 1;
    }
-   for (i = 0; i <= field_count; i++)
+   for (i = 0; i <= field_count; ++i)
    {
       len = pmatch[i].rm_eo - pmatch[i].rm_so;
       memcpy(result, src + pmatch[i].rm_so, len);
       result[len] = 0;
       f_result[i] = result; 
 //      printf("num %d: '%s'\n", i, result);
+      printf("fieald%d = %s\n", i, f_result[1]);
    }
-   printf("fieald1 = %s\n", f_result[0]);
-   printf("fieald2 = %s\n", f_result[1]);
-   printf("fieald3 = %s\n", f_result[2]);
+//   printf("fieald1 = %s\n", f_result[0]);
+//   printf("fieald2 = %s\n", f_result[1]);
+//   printf("fieald3 = %s\n", f_result[2]);
    regfree(&preg);
 //   return f_result;
    return 0;
