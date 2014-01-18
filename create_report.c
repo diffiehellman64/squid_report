@@ -106,10 +106,10 @@ int preg_match(char* src, char* pattern, int field_count)
       result[len] = 0;
       f_result[i] = result; 
 //      printf("num %d: '%s'\n", i, result);
-      printf("fieald%d = %s\n", i, f_result[1]);
+//      printf("fieald%d = %s\n", i, f_result[i]);
    }
 //   printf("fieald1 = %s\n", f_result[0]);
-//   printf("fieald2 = %s\n", f_result[1]);
+   printf("fieald2 = %s\n", f_result[1]);
 //   printf("fieald3 = %s\n", f_result[2]);
    regfree(&preg);
 //   return f_result;
