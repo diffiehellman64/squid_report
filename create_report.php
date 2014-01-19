@@ -1,5 +1,5 @@
 <?php
-function get_users($org){
+function get_users($org) {
 	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
         $ldapuser = 'yav004@RK.LOCAL';

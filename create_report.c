@@ -11,7 +11,8 @@ int preg_match(char* src, char* pattern, int field_count);
 //char** preg_match(char* src, char* pattern, int field_count);
 char** split(char *str);
 
-int main(int argc, char* argv[])
+int
+main(int argc, char* argv[])
 {
 	if (argc > 1)
 		parse_log(argv[1]);
@@ -20,7 +21,8 @@ int main(int argc, char* argv[])
 	return 0;
 }
 
-char** split(char* str)
+char **
+split(char* str)
 {
 	int i = 0;
 	char **result;
@@ -39,7 +41,8 @@ char** split(char* str)
 	return result;
 }
 
-void parse_log (char* logfile)
+void
+parse_log(char* logfile)
 {
 	FILE *file;
 	int sz;
@@ -71,7 +74,8 @@ void parse_log (char* logfile)
 	fclose(file);
 }
 //char** preg_match(char* src, char* pattern, int field_count)
-int preg_match(char* src, char* pattern, int field_count)
+int
+preg_match(char* src, char* pattern, int field_count)
 {
    int i = 0;
    int res;
@@ -86,21 +90,18 @@ int preg_match(char* src, char* pattern, int field_count)
 
    regmatch_t pmatch[10];
 
-   if( (res = regcomp(&preg, pattern, REG_EXTENDED)) != 0)
-   {
+   if( (res = regcomp(&preg, pattern, REG_EXTENDED)) != 0) {
       regerror(res, &preg, err_buf, BUFSIZ);
       printf("regcomp: %s\n", err_buf);
       exit(res);
    }
 
    res = regexec(&preg, src, 10, pmatch, REG_NOTBOL);
-   if(res == REG_NOMATCH)
-   {
+   if(res == REG_NOMATCH) {
 //      printf("NO match\n");
       return 1;
    }
-   for (i = 0; i <= field_count; ++i)
-   {
+   for (i = 0; i <= field_count; ++i) {
       len = pmatch[i].rm_eo - pmatch[i].rm_so;
       memcpy(result, src + pmatch[i].rm_so, len);
       result[len] = 0;
