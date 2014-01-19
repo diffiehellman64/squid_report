@@ -62,6 +62,7 @@ parse_log(char* logfile)
 	//	site = parsed[6];
 //		printf("%s\n", site);
  //       	user = 
+
 		printf("parsed[7] = %s\n", parsed[7]);
 		preg_match (parsed[7], pattern, 2);
 	//	if (user != 1)
