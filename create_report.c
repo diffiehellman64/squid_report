@@ -62,6 +62,7 @@ parse_log(char* logfile)
 	//	site = parsed[6];
 //		printf("%s\n", site);
  //       	user = 
+		printf("parsed[7] = %s\n", parsed[7]);
 		preg_match (parsed[7], pattern, 2);
 	//	if (user != 1)
 	//		printf ("%s\n", user[1]);
@@ -77,43 +78,44 @@ parse_log(char* logfile)
 int
 preg_match(char* src, char* pattern, int field_count)
 {
-   int i = 0;
-   int res;
-   char** f_result;
-   int len;
-   char result[BUFSIZ];
-   char err_buf[BUFSIZ];
-   regex_t preg;
+	 int i = 0;
+	 int res;
+	 char** f_result;
+	 int len;
+	 char result[BUFSIZ];
+	 char err_buf[BUFSIZ];
+	 regex_t preg;
 
-   f_result = malloc(field_count * sizeof(char *));
-   memset(f_result, 0, field_count * sizeof(char *));
+	 f_result = malloc(field_count * sizeof(char *));
+	 memset(f_result, 0, field_count * sizeof(char *));
 
-   regmatch_t pmatch[10];
+	 regmatch_t pmatch[10];
 
-   if( (res = regcomp(&preg, pattern, REG_EXTENDED)) != 0) {
-      regerror(res, &preg, err_buf, BUFSIZ);
-      printf("regcomp: %s\n", err_buf);
-      exit(res);
-   }
+	 if ((res = regcomp(&preg, pattern, REG_EXTENDED)) != 0) {
+		regerror(res, &preg, err_buf, BUFSIZ);
+		printf("regcomp: %s\n", err_buf);
+		exit(res);
+	 }
 
-   res = regexec(&preg, src, 10, pmatch, REG_NOTBOL);
-   if(res == REG_NOMATCH) {
-//      printf("NO match\n");
-      return 1;
-   }
-   for (i = 0; i <= field_count; ++i) {
-      len = pmatch[i].rm_eo - pmatch[i].rm_so;
-      memcpy(result, src + pmatch[i].rm_so, len);
-      result[len] = 0;
-      f_result[i] = result; 
-//      printf("num %d: '%s'\n", i, result);
-//      printf("fieald%d = %s\n", i, f_result[i]);
-   }
-//   printf("fieald1 = %s\n", f_result[0]);
-   printf("fieald2 = %s\n", f_result[1]);
-//   printf("fieald3 = %s\n", f_result[2]);
-   regfree(&preg);
-//   return f_result;
-   return 0;
+	 res = regexec(&preg, src, 10, pmatch, REG_NOTBOL);
+	 if (res == REG_NOMATCH) {
+//		printf("NO match\n");
+		return 1;
+	 }
+	 for (i = 0; i <= field_count; ++i) {
+		len = pmatch[i].rm_eo - pmatch[i].rm_so;
+		memcpy(result, src + pmatch[i].rm_so, len);
+		result[len] = 0;
+		f_result[i] = result; 
+//		printf("num %d: '%s'\n", i, result);
+//		printf("fieald%d = %s\n", i, f_result[i]);
+	 }
+//	 printf("fieald1 = %s\n", f_result[0]);
+
+	 printf("fieald2 = %s\n", f_result[1]);
+//	 printf("fieald3 = %s\n", f_result[2]);
+	 regfree(&preg);
+//	 return f_result;
+	 return 0;
 }
 
