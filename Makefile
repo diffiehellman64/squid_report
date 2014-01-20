@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -ggdb -O2
 
-OBJS= create_report.c
+OBJS= create_report.o
 BINARY=squid_report
 
 all: $(BINARY)
