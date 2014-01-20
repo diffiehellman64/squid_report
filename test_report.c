@@ -22,7 +22,10 @@ int
 main(int argc, char* argv[])
 {
 	if (argc > 1)
+	{
+		printf("%d", getFileSize(argv[1]));
 		parse_log(argv[1]);
+	}
 	else
 		printf("Need log file\n");
 	return 0;
@@ -53,8 +56,6 @@ cut_user(char* str)
 {
 	char* result;
 	int i;
-	//if (user == "- ")
-	//	printf ("ok\n");
 	for (i = 0; i <= strlen(str); ++i)
 	{
 		if (str[i] == '@')
@@ -81,23 +82,55 @@ cut_site(char* site)
 	
 	for (i = strlen(site); i >= 0; --i){
 		if (site[i] == '.')
-		{
 			--point_count;
-			tmp = site + i + 1;
-//			printf("%s\n", tmp);
-		}
 		if (site[i] == '/' || point_count == 0)
 		{
 			site = site + i + 1; 
 			break;
 		}
 	}
-//	printf("%s\n", site);
 	result = malloc(strlen(site) * sizeof(char *));
 	result = site;
 	return result;
 }
+/*
+char**
+get_sites()
+{
+	FILE *file;
+	int sz;
+	char *result_string;
+	result_string = NULL;
+	file = fopen("monitor_sites.list" ,"r");
+	while(getline(&result_string, &sz, file) > 0) {
+	{
+		printf("%s\n", result_string);
+		free(result_string);
+		result_string = NULL;
+	}
+	fclose(file);
+}
+*/
 
+int getFileSize(char input)
+{
+    FILE *input;
+    int fileSizeBytes;
+    // set file pointer to end of file
+    fseek(input, 0, SEEK_END);
+    // get current pointer position in bytes (== file size in bytes)
+    fileSizeBytes = ftell(input);
+    // return pointer to begin of file (it's very IMPORTANT)
+    fseek(input, 0, SEEK_SET);
+    return fileSizeBytes;
+}
+
+/*
+void show_progress()
+{
+
+}
+*/
 void
 parse_log(char* logfile)
 {
@@ -110,18 +143,15 @@ parse_log(char* logfile)
 	char* site;
 	file = fopen(logfile,"r");
 	result_string = NULL;
+//	get_sites();
 	while(getline(&result_string, &sz, file) > 0) {
-//		printf("%d\n", i++);
 		parsed = split (result_string);
 		user = cut_user(parsed[7]);
 		site = cut_site(parsed[6]);
-		printf("%s => %s\n", user, site);
-//		printf("%s\n", site);
+//		printf("%s => %s", user, site);
 		free(result_string);
-//		free(user);
 		free(parsed);
 		result_string = NULL;
-//		i++;
 	}
 	fclose(file);
 }

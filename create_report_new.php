@@ -195,8 +195,8 @@ function show_progress($count, $current_line){
 
 function get_time_pool($time){
 	global $time_str;
-	if ($time_str[0] > $time) {$time_str[0] = $time;}
-	if ($time_str[1] < $time) {$time_str[1] = $time;}
+	if ($time_str[0] > $time) {$time_str[0] = $time; echo '0 = '.$time."\n";}
+	if ($time_str[1] < $time) {$time_str[1] = $time; echo '1 = '.$time."\n"; }
 }
 
 function get_result($logfile){
@@ -217,19 +217,20 @@ function get_result($logfile){
 		while (($buffer = fgets($handle, 4096)) !== false) {
 			$current_line++;
                         show_progress($count[0], $current_line);
-			$tmp = split('"', $buffer);
-			$l = trim($tmp[0]);
-			$line = preg_split('/ +/', $l);
-			$response = split('/', $line[3]);
-			if ($line[5] == 'GET' && $line[9] == 'text/html' && $response[0] == 'TCP_MISS'){
-//			print_r ($response);
-//			print_r ($line);
+			$line = split(" \| ", trim($buffer));
+			$response = substr($line[3], 0, 8);
+			if ($line[5] == 'GET' && $line[9] == 'text/html' && $response == 'TCP_MISS'){
 				get_time_pool($line[0]);
-				preg_match('/^([^@]+)/', $line[7], $matches);
-				$user = $matches[1];
+//				echo strrpos($line[7], '@')."\n";
+				if (strrpos($line[7], '@')){
+					$user = substr($line[7], 0, strrpos($line[7], '@'));
+				} else {
+					$user = $line[7];
+				}
+//				echo $user."\n";
+//				$user = substr($line[7], 0, strrpos($line[7], '@'));
 				if (isset($users[$user])){
 					$url = get_clen_baseurl($line[6]);
-		
 					if (!in_array($url, $monitor)){
 						$url = 'other';
 					}
