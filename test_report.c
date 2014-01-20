@@ -82,9 +82,19 @@ cut_site(char* site)
 			site[i] = '\0';
 	}
 	
+//	printf("%s\n", site);
 	for (i = strlen(site); i >= 0; --i){
 		if (site[i] == '.')
-			--point_count;
+		{
+			if(!(isdigit(site[i + 1]) && point_count == 2))
+			{
+				--point_count;
+			} /*else {
+				printf("%s\n", site);	
+			}*/
+			//tmp = site + i;
+			//printf("%s\n", site[i]);
+		}
 		if (site[i] == '/' || point_count == 0)
 		{
 			site = site + i + 1; 
@@ -153,7 +163,7 @@ parse_log(char* logfile)
 		user = cut_user(parsed[7]);
 		site = cut_site(parsed[6]);
 //		printf("%d\n", strlen(result_string) * sizeof(char *));
-//		printf("%s => %s", user, site);
+		printf("%s => %s\n", user, site);
 		free(result_string);
 		free(parsed);
 		result_string = NULL;
