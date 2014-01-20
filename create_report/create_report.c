@@ -4,7 +4,8 @@
 #include <stdlib.h>
 #include <sys/types.h>
 
-#include "log.h"
+#include "hash.h"
+#include "users_request.h"
 
 #define N_FIELDS 10
 
@@ -19,6 +20,7 @@
 #define	METHOD_MAXLEN 128
 #define	URI_MAXLEN 8192
 #define	USERNAME_MAXLEN 128
+#define ORGNAME_MAXLEN 128
 
 struct log_entry {
 	int time;
@@ -44,6 +46,7 @@ usage_and_die(char *pname)
 	exit(1);
 }
 
+
 int
 main(int argc, char* argv[])
 {
@@ -68,13 +71,19 @@ main(int argc, char* argv[])
 void
 parse_log(FILE *fp)
 {
+	user_table_t *table;
+
 	struct log_entry entry;
 
+	table = user_table_new();
+
 	while (read_record(fp, &entry) == 0) {
-		printf("user %s uri %s\n", 
-		    chop_uname(entry.username),
-		    chop_domain(entry.uri));
+		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
 	}
+
+	user_table_list(table);
+
+	user_table_del(&table);
 }
 
 int
