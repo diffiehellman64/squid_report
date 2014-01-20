@@ -23,7 +23,9 @@ main(int argc, char* argv[])
 {
 	if (argc > 1)
 	{
-		printf("%d", getFileSize(argv[1]));
+		printf("%d\n", getFileSize(argv[1]));
+		//printf("ok\n");
+	//	getch();
 		parse_log(argv[1]);
 	}
 	else
@@ -112,16 +114,18 @@ get_sites()
 }
 */
 
-int getFileSize(char input)
+int getFileSize(char* input)
 {
-    FILE *input;
+    FILE *file;
+    file = fopen(input, "r");
     int fileSizeBytes;
     // set file pointer to end of file
-    fseek(input, 0, SEEK_END);
+    fseek(file, 0, SEEK_END);
     // get current pointer position in bytes (== file size in bytes)
-    fileSizeBytes = ftell(input);
+    fileSizeBytes = ftell(file);
     // return pointer to begin of file (it's very IMPORTANT)
-    fseek(input, 0, SEEK_SET);
+    fseek(file, 0, SEEK_SET);
+    fclose(file);
     return fileSizeBytes;
 }
 
@@ -148,6 +152,7 @@ parse_log(char* logfile)
 		parsed = split (result_string);
 		user = cut_user(parsed[7]);
 		site = cut_site(parsed[6]);
+//		printf("%d\n", strlen(result_string) * sizeof(char *));
 //		printf("%s => %s", user, site);
 		free(result_string);
 		free(parsed);
