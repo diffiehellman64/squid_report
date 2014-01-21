@@ -91,33 +91,39 @@ getsites(char* filename) {
 	int i = 0;
 
 	result = malloc(N_MONITOR_SITES * sizeof(char*));
+	memset(result, 0, N_MONITOR_SITES * sizeof(char*));
+
 	fp = fopen(filename, "r");
 	if (fp == NULL) {
-		printf("Cann`t open list of sites for monitoring\n");
+		printf("Can`t open list of sites for monitoring\n");
 		exit(1);
 	}
 
 	while ((read = getline(&line, &len, fp)) != -1) {
 		//printf("%s", line);
 		result[i++] = line;
+		//ask getline allocate another chunk of memory
+		line = NULL;
 	}
 
 	fclose(fp);
-	free(line);
+
 	return result;
 }
 
 void
 parse_log(FILE *fp)
 {
-/*	char** sites = getsites("monitor_sites.list");
+	char** sites = getsites("monitor_sites.list");
 	int i = 0;
 
-	for (i = 0; i <= N_MONITOR_SITES; ++i){
+	for (i = 0; i <= N_MONITOR_SITES; ++i) {
+		if (sites[i] == NULL)
+			break;
 		printf("%s\n", sites[i]);
 	}
 	free (sites);
-*/
+
 	user_table_t *table;
 
 	struct log_entry entry;
