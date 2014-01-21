@@ -3,11 +3,13 @@
 #include <string.h>
 #include <stdlib.h>
 #include <sys/types.h>
+#include <ctype.h>
 
 #include "hash.h"
 #include "users_request.h"
 
 #define N_FIELDS 10
+#define N_MONITOR_SITES 30
 
 //black magic  Хахаха...
 #define TO_STR(arg) _TO_STR(arg)
@@ -40,6 +42,7 @@ char *chop_uname(char *uname);
 char *chop_domain(char *uri);
 //diff added
 char *cut_site(char *site);
+char **getsites(char* filename);
 
 void
 usage_and_die(char *pname)
@@ -68,21 +71,49 @@ main(int argc, char* argv[])
 	return 0;
 }
 
-/*char **
+// Функция должна возвращать массив, в котором содежится перечень сайтов
+// для мониторинга.
+// В дальнейшем посещения этих сайтов будут считаться, а остальные сайты будут
+// переименовываться в other и считаться как other.
+
+char **
 getsites(char* filename) {
-	
-	return ;
+	FILE *fp;
+	char *line = NULL;
+	size_t len = 0;
+	ssize_t read;
+	char** result;
+	int i = 0;
+	result = malloc(N_MONITOR_SITES * sizeof(char*));
+	fp = fopen(filename, "r");
+	if (fp == NULL){
+		printf("Cann`t open list of sites for monitoring\n");
+		exit(1);
+	}
+	while ((read = getline(&line, &len, fp)) != -1) {
+		//printf("%s", line);
+		result[i++] = line;
+	}
+	fclose(fp);
+	free(line);
+	return result;
 }
-*/
 
 void
 parse_log(FILE *fp)
 {
+/*	char** sites = getsites("monitor_sites.list");
+	int i = 0;
+
+	for (i = 0; i <= N_MONITOR_SITES; ++i){
+		printf("%s\n", sites[i]);
+	}
+	free (sites);
+*/
 	user_table_t *table;
 
 	struct log_entry entry;
 	
-//	int i = 0;
 	
 	table = user_table_new();
 
