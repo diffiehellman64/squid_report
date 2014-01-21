@@ -86,16 +86,19 @@ getsites(char* filename) {
 	ssize_t read;
 	char** result;
 	int i = 0;
+
 	result = malloc(N_MONITOR_SITES * sizeof(char*));
 	fp = fopen(filename, "r");
-	if (fp == NULL){
+	if (fp == NULL) {
 		printf("Cann`t open list of sites for monitoring\n");
 		exit(1);
 	}
+
 	while ((read = getline(&line, &len, fp)) != -1) {
 		//printf("%s", line);
 		result[i++] = line;
 	}
+
 	fclose(fp);
 	free(line);
 	return result;
@@ -180,8 +183,7 @@ cut_user(char* str)
 {
         char* result;
         int i;
-        for (i = 0; i <= strlen(str); ++i)
-        {
+        for (i = 0; i <= strlen(str); ++i) {
                 if (str[i] == '@')
                         str[i] = '\0';
         }
@@ -220,25 +222,21 @@ chop_domain(char *uri)
 //Я написал такую функцию по отчленению домена
 //Мне нужно только домены 2-го уровня, т.е. не sdfsdf.vk.com, а vk.com
 char*
-cut_site(char* site) {
+cut_site(char* site)
+{
 //        char* result;
         int i;
         int point_count = 2;
-        for (i = 8; i < strlen(site); ++i)
-        {
+        for (i = 8; i < strlen(site); ++i) {
                 if (site[i] == '/' || site[i] == ':')
                         site[i] = '\0';
         }
-        for (i = strlen(site); i >= 0; --i){
-                if (site[i] == '.')
-                {
+        for (i = strlen(site); i >= 0; --i) {
+                if (site[i] == '.') {
                         if(!(isdigit(site[i + 1]) && point_count == 2))
-                        {
                                 --point_count;
-                        }
                 }
-                if (site[i] == '/' || point_count == 0)
-                {
+                if (site[i] == '/' || point_count == 0) {
                         site = site + i + 1; 
                         break;
                 }
