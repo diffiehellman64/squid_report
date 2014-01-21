@@ -9,7 +9,7 @@
 
 #define N_FIELDS 10
 
-//black magic
+//black magic  Хахаха...
 #define TO_STR(arg) _TO_STR(arg)
 #define _TO_STR(arg) #arg
 //end of black magic
@@ -48,7 +48,6 @@ usage_and_die(char *pname)
 	exit(1);
 }
 
-
 int
 main(int argc, char* argv[])
 {
@@ -69,6 +68,12 @@ main(int argc, char* argv[])
 	return 0;
 }
 
+/*char **
+getsites(char* filename) {
+	
+	return ;
+}
+*/
 
 void
 parse_log(FILE *fp)
@@ -76,10 +81,13 @@ parse_log(FILE *fp)
 	user_table_t *table;
 
 	struct log_entry entry;
-
+	
+//	int i = 0;
+	
 	table = user_table_new();
 
 	while (read_record(fp, &entry) == 0) {
+//		printf ("%d\n", i++);
 //		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
 //diff added
 		user_table_add_entry(table, chop_uname(entry.username), cut_site(entry.uri));

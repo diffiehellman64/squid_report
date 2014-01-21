@@ -224,4 +224,3 @@ site_item_del(struct site_item **item)
 	free(*item);
 	*item = NULL;
 }
-
