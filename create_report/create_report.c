@@ -38,6 +38,8 @@ int read_record(FILE *fp, struct log_entry *entry);
 
 char *chop_uname(char *uname);
 char *chop_domain(char *uri);
+//diff added
+char *cut_site(char *site);
 
 void
 usage_and_die(char *pname)
@@ -78,7 +80,9 @@ parse_log(FILE *fp)
 	table = user_table_new();
 
 	while (read_record(fp, &entry) == 0) {
-		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
+//		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
+//diff added
+		user_table_add_entry(table, chop_uname(entry.username), cut_site(entry.uri));
 	}
 
 	user_table_list(table);
@@ -128,6 +132,23 @@ chop_uname(char *uname)
 	return uname;
 }
 
+//Для пользователя у меня вот эта функция, но я не знаю быстрее ли она чем chop_uname
+/*
+char*
+cut_user(char* str)
+{
+        char* result;
+        int i;
+        for (i = 0; i <= strlen(str); ++i)
+        {
+                if (str[i] == '@')
+                        str[i] = '\0';
+        }
+        result = malloc(strlen(str) * sizeof(char *));
+        result = str;
+        return result;
+}
+*/
 //FIXME maybe need to rewrite me
 char *
 chop_domain(char *uri)
@@ -155,3 +176,35 @@ chop_domain(char *uri)
 	return uri;
 }
 
+//Я написал такую функцию по отчленению домена
+//Мне нужно только домены 2-го уровня, т.е. не sdfsdf.vk.com, а vk.com
+char*
+cut_site(char* site) {
+//        char* result;
+        int i;
+        int point_count = 2;
+        for (i = 8; i < strlen(site); ++i)
+        {
+                if (site[i] == '/' || site[i] == ':')
+                        site[i] = '\0';
+        }
+        for (i = strlen(site); i >= 0; --i){
+                if (site[i] == '.')
+                {
+                        if(!(isdigit(site[i + 1]) && point_count == 2))
+                        {
+                                --point_count;
+                        }
+                }
+                if (site[i] == '/' || point_count == 0)
+                {
+                        site = site + i + 1; 
+                        break;
+                }
+        }
+//        result = malloc(strlen(site) * sizeof(char *));
+//        result = site;
+//        return result;
+//	memmove(site, site + d_s, d_e - d_s);
+	return site;
+}
