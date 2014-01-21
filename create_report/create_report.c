@@ -1,11 +1,13 @@
+#include <arpa/inet.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <stdlib.h>
-#include <sys/types.h>
 #include <ctype.h>
 
+#include <sys/types.h>
+
 #include "hash.h"
+#include "macros.h"
 #include "users_request.h"
 
 #define N_FIELDS 10
@@ -40,6 +42,7 @@ int read_record(FILE *fp, struct log_entry *entry);
 
 char *chop_uname(char *uname);
 char *chop_domain(char *uri);
+char *chop_lvl2_domain(char *domname);
 //diff added
 char *cut_site(char *site);
 char **getsites(char* filename);
@@ -126,7 +129,9 @@ parse_log(FILE *fp)
 //		printf ("%d\n", i++);
 //		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
 //diff added
-		user_table_add_entry(table, chop_uname(entry.username), cut_site(entry.uri));
+		user_table_add_entry(table,
+		    chop_uname(entry.username),
+		    chop_lvl2_domain(cut_site(entry.uri)));
 	}
 
 	user_table_list(table);
@@ -192,7 +197,8 @@ cut_user(char* str)
         return result;
 }
 */
-//FIXME maybe need to rewrite me
+//FIXME maybe need to append me
+//func should have bug when uri contains IPv6 address
 char *
 chop_domain(char *uri)
 {
@@ -203,8 +209,7 @@ chop_domain(char *uri)
 
 	if (strncmp(uri, "http://", 7) == 0)
 		d_s = 7;
-
-	if (strncmp(uri, "https://", 8) == 0)
+	else if (strncmp(uri, "https://", 8) == 0)
 		d_s = 8;
 	
 	p = strchr(uri + d_s, '/');
@@ -213,10 +218,46 @@ chop_domain(char *uri)
 	else
 		d_e = p - uri;
 
+	//maybe we find port?
+	p = strchr(uri + d_s, ':');
+	if (p != NULL)
+		d_e = MIN(d_e, p - uri);
+
 	memmove(uri, uri + d_s, d_e - d_s);
 	uri[d_e - d_s] = 0;
 
 	return uri;
+}
+
+/*
+ * NOTE: we assume that domname is domain name without
+ * protocol name or uri path
+ */
+char *
+chop_lvl2_domain(char *domname)
+{
+	int i;
+	int len, n;
+	unsigned char unusedbuf[sizeof(struct in6_addr)];
+
+	//then we have ipaddr
+	if (inet_pton(AF_INET, domname, (void *)unusedbuf) > 0 ||
+	    inet_pton(AF_INET6, domname, (void *)unusedbuf) > 0)
+		return domname;
+
+	n = 0;
+	len = strlen(domname);
+	for (i = len; i >= 0; i--) {
+		if (domname[i] == '.') {
+			n++;
+			if (n == 2)
+				break;
+		}
+	}
+	if (i > 0)
+		memmove(domname, domname + i + 1, len - i - 1);
+
+	return domname;
 }
 
 //Я написал такую функцию по отчленению домена
