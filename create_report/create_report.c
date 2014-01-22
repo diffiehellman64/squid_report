@@ -56,6 +56,12 @@ usage_and_die(char *pname)
 	exit(1);
 }
 
+//Напиши обработчик опций чтобы можно было включать/отключать болтливый режим,
+//выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
+#define N_LINES 1000
+int is_verbose = 1;
+
+
 int
 main(int argc, char* argv[])
 {
@@ -129,11 +135,12 @@ parse_log(FILE *fp)
 {
 	user_table_t *table;
 	struct log_entry entry;
-	char **sites = getsites("monitor_sites.list");
 	char *url;
 	char *other_url;
 	other_url = "other";
 	int count_sites = 0;
+	char **sites = getsites("monitor_sites.list");
+	int lines;
 
 	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
 		if (sites[count_sites] == NULL)
@@ -141,14 +148,24 @@ parse_log(FILE *fp)
 	}
 	
 	table = user_table_new();
+	lines = 0;
 
 	while (read_record(fp, &entry) == 0) {
+		lines++;
+
 		url = chop_lvl2_domain(cut_site(entry.uri));
 		if (!is_exist_elem(url, sites, count_sites))
 			url = other_url;
 		user_table_add_entry(table,
 		    chop_uname(entry.username),
 		    url);
+
+		if (is_verbose && lines % N_LINES == 0) {
+			//not first time
+			if (lines != N_LINES)
+				printf("\033[1A");
+			printf("%d lines processed\n", lines);
+		}
 	}
 
 
