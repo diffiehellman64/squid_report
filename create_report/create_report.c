@@ -46,6 +46,7 @@ char *chop_lvl2_domain(char *domname);
 //diff added
 char *cut_site(char *site);
 char **getsites(char* filename);
+int exist_elem (char *elem, char **array, int elem_count);
 
 void
 usage_and_die(char *pname)
@@ -74,13 +75,6 @@ main(int argc, char* argv[])
 	return 0;
 }
 
-// Функция должна возвращать массив, в котором содежится перечень сайтов
-// для мониторинга.
-// В дальнейшем посещения этих сайтов будут считаться, а остальные сайты будут
-// переименовываться в other и считаться как other.
-// Боря, думаю тут тебе нужно кое чего поправить - при компиляции нормально,
-// а вот исполнение бинарника валится...
-
 char **
 getsites(char* filename) {
 	FILE *fp;
@@ -89,7 +83,6 @@ getsites(char* filename) {
 	ssize_t read;
 	char** result;
 	int i = 0;
-
 	result = malloc(N_MONITOR_SITES * sizeof(char*));
 	memset(result, 0, N_MONITOR_SITES * sizeof(char*));
 
@@ -100,7 +93,7 @@ getsites(char* filename) {
 	}
 
 	while ((read = getline(&line, &len, fp)) != -1) {
-		//printf("%s", line);
+		line[strlen(line) - 1] = '\0';
 		result[i++] = line;
 		//ask getline allocate another chunk of memory
 		line = NULL;
@@ -111,18 +104,31 @@ getsites(char* filename) {
 	return result;
 }
 
+int
+exist_elem (char *elem, char **array, int elem_count)
+{
+	int i;
+	for (i=0; i < elem_count; i++) {
+		if (strcmp(array[i], elem) == 0)
+			return 1;
+	}
+	return 0;
+}
+
 void
 parse_log(FILE *fp)
 {
-	char** sites = getsites("monitor_sites.list");
-	int i = 0;
+	char **sites = getsites("monitor_sites.list");
+	char *url;
+	char *other_url;
+	other_url = "other";
+	int count_sites = 0;
 
-	for (i = 0; i <= N_MONITOR_SITES; ++i) {
-		if (sites[i] == NULL)
+	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
+		if (sites[count_sites] == NULL)
 			break;
-		printf("%s\n", sites[i]);
 	}
-	free (sites);
+
 
 	user_table_t *table;
 
@@ -132,13 +138,15 @@ parse_log(FILE *fp)
 	table = user_table_new();
 
 	while (read_record(fp, &entry) == 0) {
-//		printf ("%d\n", i++);
-//		user_table_add_entry(table, chop_uname(entry.username), chop_domain(entry.uri));
-//diff added
+		url = chop_lvl2_domain(cut_site(entry.uri));
+		if (exist_elem(url, sites, count_sites) == 0)
+			url = other_url;
 		user_table_add_entry(table,
 		    chop_uname(entry.username),
-		    chop_lvl2_domain(cut_site(entry.uri)));
+		    url);
 	}
+
+	free (sites);
 
 	user_table_list(table);
 
