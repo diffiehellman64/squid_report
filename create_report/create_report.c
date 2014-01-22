@@ -99,6 +99,9 @@ getsites(char* filename) {
 		line = NULL;
 	}
 
+	result[i] = "other";	
+	result[i + 1] = NULL;
+
 	fclose(fp);
 
 	return result;
@@ -146,9 +149,12 @@ parse_log(FILE *fp)
 		    url);
 	}
 
-	free (sites);
 
-	user_table_list(table);
+//	user_table_list(table);
+
+	user_table_write_csv(table, sites, "test.csv");	
+
+	free (sites);
 
 	user_table_del(&table);
 }
