@@ -3,6 +3,7 @@
 
 #include "common.h"
 #include "hash.h"
+#include "log.h"
 #include "macros.h"
 #include "users_request.h"
 
@@ -152,22 +153,22 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 
                 iter2 = hash_table_iterate_init(item->site_requests);
                 fprintf(fp, "%s;", item->uname);
-//		printf("%s;", item->uname);
+		DEBUG(LOG_VERBOSE, "%s;", item->uname);
         	while (hash_table_iterate(iter2, &key2, &data2) != FALSE) {
 			while (sites[i] != NULL) {
 	                	struct site_item *item2 = data2;
 				if (strcmp(sites[i], item2->site) == 0) {
 					fprintf(fp, "%d;", item2->n);
-//					printf("%d;", item2->n);
+					DEBUG(LOG_VERBOSE, "%d;", item2->n);
 				} else {
-//					printf("0;");
+					DEBUG(LOG_VERBOSE, "0;");
 					fprintf(fp, "0;");
 				}
 			++i;
                 	}
 		}
 		fprintf(fp, "\n");
-//		printf("\n");
+		DEBUG(LOG_VERBOSE, "\n");
                 hash_table_iterate_deinit(&iter2);
         }
 	

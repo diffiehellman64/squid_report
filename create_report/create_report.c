@@ -7,6 +7,7 @@
 #include <sys/types.h>
 
 #include "hash.h"
+#include "log.h"
 #include "macros.h"
 #include "users_request.h"
 
@@ -68,6 +69,11 @@ main(int argc, char* argv[])
 
 	while (argc--) {
 		fp = fopen(argv[0], "r");
+		if (fp == NULL) {
+			warning("Can't open %s\n", argv[0]);
+			continue;
+		}
+
 		parse_log(fp);
 		argv++;
 	}
@@ -108,19 +114,21 @@ getsites(char* filename) {
 }
 
 int
-exist_elem (char *elem, char **array, int elem_count)
+is_exist_elem (char *elem, char **array, int elem_count)
 {
 	int i;
 	for (i=0; i < elem_count; i++) {
 		if (strcmp(array[i], elem) == 0)
-			return 1;
+			return TRUE;
 	}
-	return 0;
+	return FALSE;
 }
 
 void
 parse_log(FILE *fp)
 {
+	user_table_t *table;
+	struct log_entry entry;
 	char **sites = getsites("monitor_sites.list");
 	char *url;
 	char *other_url;
@@ -131,18 +139,12 @@ parse_log(FILE *fp)
 		if (sites[count_sites] == NULL)
 			break;
 	}
-
-
-	user_table_t *table;
-
-	struct log_entry entry;
-	
 	
 	table = user_table_new();
 
 	while (read_record(fp, &entry) == 0) {
 		url = chop_lvl2_domain(cut_site(entry.uri));
-		if (exist_elem(url, sites, count_sites) == 0)
+		if (!is_exist_elem(url, sites, count_sites))
 			url = other_url;
 		user_table_add_entry(table,
 		    chop_uname(entry.username),
@@ -150,7 +152,9 @@ parse_log(FILE *fp)
 	}
 
 
-//	user_table_list(table);
+#if IS_DEBUG > 0
+	user_table_list(table);
+#endif
 
 	user_table_write_csv(table, sites, "test.csv");	
 
@@ -201,22 +205,6 @@ chop_uname(char *uname)
 	return uname;
 }
 
-//Для пользователя у меня вот эта функция, но я не знаю быстрее ли она чем chop_uname
-/*
-char*
-cut_user(char* str)
-{
-        char* result;
-        int i;
-        for (i = 0; i <= strlen(str); ++i) {
-                if (str[i] == '@')
-                        str[i] = '\0';
-        }
-        result = malloc(strlen(str) * sizeof(char *));
-        result = str;
-        return result;
-}
-*/
 //FIXME maybe need to append me
 //func should have bug when uri contains IPv6 address
 char *
@@ -274,6 +262,7 @@ chop_lvl2_domain(char *domname)
 				break;
 		}
 	}
+
 	if (i > 0)
 		memmove(domname, domname + i + 1, len - i - 1);
 
