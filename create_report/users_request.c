@@ -149,12 +149,6 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 	}
 	site_count = i;
 
-//	printf ("%d\n", site_count);
-
-/*	for (i = 0; i < site_count; ++i) {
-		printf("%d\n", line_s[i]);
-	}
-*/
 	fprintf(fp, "\n");
 	
         while (hash_table_iterate(iter, &key, &data) != FALSE) {
@@ -180,13 +174,11 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 		}
 
                 for (i = 0; i < site_count ; i++){
-			fprintf(fp, "%d;", line_s[i]);
 			printf("%d;", line_s[i]);
                         line_s[i] = 0;
                 }
 
 		fprintf(fp, "\n");
-		printf("\n");
 		DEBUG(LOG_VERBOSE, "\n");
                 hash_table_iterate_deinit(&iter2);
         }
