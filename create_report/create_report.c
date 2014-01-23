@@ -205,7 +205,7 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	user_table_list(table);
 #endif
 
-	user_table_list(table);
+//	user_table_list(table);
 
 	user_table_write_csv(table, sites, csvfile);	
 
