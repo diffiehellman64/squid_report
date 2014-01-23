@@ -3,6 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 #include <ctype.h>
+#include <unistd.h>
 
 #include <sys/types.h>
 
@@ -38,7 +39,7 @@ struct log_entry {
 	char username[USERNAME_MAXLEN];
 };
 
-void parse_log(FILE *fp);
+void parse_log(FILE *fp, char *csvfile, char *monitor);
 int read_record(FILE *fp, struct log_entry *entry);
 
 char *chop_uname(char *uname);
@@ -59,30 +60,61 @@ usage_and_die(char *pname)
 //Напиши обработчик опций чтобы можно было включать/отключать болтливый режим,
 //выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
 #define N_LINES 1000
-int is_verbose = 1;
+int is_verbose = 0;
 
 
 int
 main(int argc, char* argv[])
 {
+	int rez=0;
 	FILE *fp;
+	char *logfile;
+	char *csvfile = NULL;
+	char *monitor = NULL;
+	
+	while ( (rez = getopt(argc,argv,"l:o:m:vd")) != -1){
+		switch (rez){
+			case 'l': 
+				logfile = optarg;	
+				break;
+			case 'o': 
+				csvfile = optarg;
+				break;
+			case 'm':
+				monitor = optarg;
+				break;
+			case 'v': 
+				printf("VERBOSE MOD!\n");
+				is_verbose = 1; 
+				break;
+			case 'd': 
+				printf("DEBUG MOD!\n"); 
+				break;
+			case '?': 
+				printf("Error found !\n");
+				break;
+        	};
+	};
 
-	if (argc < 2)
-		usage_and_die(argv[0]);
-
-	argc--;
-	argv++;
-
-	while (argc--) {
-		fp = fopen(argv[0], "r");
-		if (fp == NULL) {
-			warning("Can't open %s\n", argv[0]);
-			continue;
-		}
-
-		parse_log(fp);
-		argv++;
+        fp = fopen(logfile, "r");
+	if (fp == NULL) {
+		warning("Can't open logfile\n");
+		exit(1);
 	}
+
+	if (csvfile == NULL) {
+		csvfile = "test.csv";
+	}
+
+	if (monitor == NULL){
+		monitor = "monitor_sites.list";
+	}
+	
+	printf("LOG file: %s\n", logfile);
+	printf("CSV file: %s\n", csvfile);
+	printf("Monitor sites: %s\n", monitor);
+	
+	parse_log(fp, csvfile, monitor);
 
 	return 0;
 }
@@ -107,7 +139,6 @@ getsites(char* filename) {
 	while ((read = getline(&line, &len, fp)) != -1) {
 		line[strlen(line) - 1] = '\0';
 		result[i++] = line;
-		//ask getline allocate another chunk of memory
 		line = NULL;
 	}
 
@@ -131,15 +162,16 @@ is_exist_elem (char *elem, char **array, int elem_count)
 }
 
 void
-parse_log(FILE *fp)
+parse_log(FILE *fp, char *csvfile, char *monitor)
 {
+	printf("Start parse log...\n");
 	user_table_t *table;
 	struct log_entry entry;
 	char *url;
 	char *other_url;
 	other_url = "other";
 	int count_sites = 0;
-	char **sites = getsites("monitor_sites.list");
+	char **sites = getsites(monitor);
 	int lines;
 
 	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
@@ -173,7 +205,9 @@ parse_log(FILE *fp)
 	user_table_list(table);
 #endif
 
-	user_table_write_csv(table, sites, "test.csv");	
+	user_table_list(table);
+
+	user_table_write_csv(table, sites, csvfile);	
 
 	free (sites);
 

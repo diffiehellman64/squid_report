@@ -146,7 +146,6 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 	fprintf(fp, "\n");
 
         while (hash_table_iterate(iter, &key, &data) != FALSE) {
-		i = 0;
                 void *key2, *data2;
                 struct hash_table_iter *iter2;
                 struct user_item *item = data;
@@ -155,16 +154,15 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
                 fprintf(fp, "%s;", item->uname);
 		DEBUG(LOG_VERBOSE, "%s;", item->uname);
         	while (hash_table_iterate(iter2, &key2, &data2) != FALSE) {
+			i = 0;
 			while (sites[i] != NULL) {
 	                	struct site_item *item2 = data2;
 				if (strcmp(sites[i], item2->site) == 0) {
-					fprintf(fp, "%d;", item2->n);
+					fprintf(fp, "%s - %d;", item2->site, item2->n);
 					DEBUG(LOG_VERBOSE, "%d;", item2->n);
-				} else {
-					DEBUG(LOG_VERBOSE, "0;");
-					fprintf(fp, "0;");
+					break;
 				}
-			++i;
+				++i;
                 	}
 		}
 		fprintf(fp, "\n");
