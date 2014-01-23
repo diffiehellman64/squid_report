@@ -49,7 +49,8 @@ char *chop_lvl2_domain(char *domname);
 char *cut_site(char *site);
 char **getsites(char* filename);
 int exist_elem (char *elem, char **array, int elem_count);
-int count_line (char *filename);
+int count_lines (FILE *fp);
+void progress(int global, int curent);
 
 void
 usage_and_die(char *pname)
@@ -62,7 +63,6 @@ usage_and_die(char *pname)
 //выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
 #define N_LINES 1000
 int is_verbose = 0;
-
 
 int
 main(int argc, char* argv[])
@@ -114,25 +114,33 @@ main(int argc, char* argv[])
 	printf("LOG file: %s\n", logfile);
 	printf("CSV file: %s\n", csvfile);
 	printf("Monitor sites: %s\n", monitor);
+//	printf("Lines: %d\n", count_line(logfile));
 	
 	parse_log(fp, csvfile, monitor);
 
+	printf("DONE!\n");
 	return 0;
 }
 
-int count_line (char *filename) {
+int
+count_lines (FILE *fp)
+{
+	printf ("Counting lines...\n");
 	int i = 0;
-	char c;
-	sis = fopen(sis_file_name.c_str(), "r");
-	while (fread(c, 1, 1, sis) != EOF) {
-		if(c == "\n")
-	        i++;
+	int sz;
+	char *buff;
+	buff = NULL;
+	while(getline(&buff, &sz, fp) > 0) {
+		buff = NULL;
+		++i;
 	}
+	printf("Lines: %d\n", i);
 	return i;	
 }
 
 char **
-getsites(char* filename) {
+getsites(char* filename)
+{
 	FILE *fp;
 	char *line = NULL;
 	size_t len = 0;
@@ -174,9 +182,34 @@ is_exist_elem (char *elem, char **array, int elem_count)
 }
 
 void
+progress(int global, int curent) 
+{
+	int i;
+	float j;
+	float d = 50;
+//	printf("\033[1A");
+	float proc;
+	float g = (float) global;
+	float c = (float) curent;
+	proc = c/g;
+	j = proc * d ;
+	printf("\r[");
+	for (i = 0; i <= d; ++i) {
+		if (i < j)
+			printf("#");
+		else
+			printf(".");
+	}
+	printf("]\t");
+	printf("\t%3.2f%%", proc*100);
+}
+
+void
 parse_log(FILE *fp, char *csvfile, char *monitor)
 {
+	int lines_c = count_lines(fp);
 	printf("Start parse log...\n");
+	rewind(fp);
 	user_table_t *table;
 	struct log_entry entry;
 	char *url;
@@ -205,10 +238,7 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 		    url);
 
 		if (is_verbose && lines % N_LINES == 0) {
-			//not first time
-			if (lines != N_LINES)
-				printf("\033[1A");
-			printf("%d lines processed\n", lines);
+			progress(lines_c, lines);
 		}
 	}
 
