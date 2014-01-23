@@ -49,6 +49,7 @@ char *chop_lvl2_domain(char *domname);
 char *cut_site(char *site);
 char **getsites(char* filename);
 int exist_elem (char *elem, char **array, int elem_count);
+int count_line (char *filename);
 
 void
 usage_and_die(char *pname)
@@ -117,6 +118,17 @@ main(int argc, char* argv[])
 	parse_log(fp, csvfile, monitor);
 
 	return 0;
+}
+
+int count_line (char *filename) {
+	int i = 0;
+	char c;
+	sis = fopen(sis_file_name.c_str(), "r");
+	while (fread(c, 1, 1, sis) != EOF) {
+		if(c == "\n")
+	        i++;
+	}
+	return i;	
 }
 
 char **
