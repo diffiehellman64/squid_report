@@ -126,6 +126,7 @@ user_table_list(user_table_t *table)
 void
 user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 {
+	printf("Creating CSV file...\n");
 	FILE *fp;
         void *key, *data;
         struct hash_table_iter *iter;

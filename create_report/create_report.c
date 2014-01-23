@@ -61,7 +61,7 @@ usage_and_die(char *pname)
 
 //Напиши обработчик опций чтобы можно было включать/отключать болтливый режим,
 //выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
-#define N_LINES 1000
+#define N_LINES 10000
 int is_verbose = 0;
 
 int
@@ -241,7 +241,9 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 			progress(lines_c, lines);
 		}
 	}
-
+	if (is_verbose) {
+		printf("\n");
+	}
 
 #if IS_DEBUG > 0
 	user_table_list(table);
