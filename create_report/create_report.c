@@ -27,6 +27,10 @@
 #define	URI_MAXLEN 8192
 #define	USERNAME_MAXLEN 128
 #define ORGNAME_MAXLEN 128
+#define SH_MAXLEN 128
+#define TYPE_MAXLEN 128
+#define USERAGENT_MAXLEN 512
+#define REFERER_MAXLEN 8192
 
 struct log_entry {
 	int time;
@@ -73,7 +77,7 @@ main(int argc, char* argv[])
 	char *csvfile = NULL;
 	char *monitor = NULL;
 	
-	while ( (rez = getopt(argc,argv,"l:o:m:vd")) != -1){
+	while ( (rez = getopt(argc,argv,"l:o:m:v")) != -1){
 		switch (rez){
 			case 'l': 
 				logfile = optarg;	
@@ -87,9 +91,6 @@ main(int argc, char* argv[])
 			case 'v': 
 				printf("VERBOSE MOD!\n");
 				is_verbose = 1; 
-				break;
-			case 'd': 
-				printf("DEBUG MOD!\n"); 
 				break;
 			case '?': 
 				printf("Error found !\n");
@@ -207,9 +208,12 @@ progress(int global, int curent)
 void
 parse_log(FILE *fp, char *csvfile, char *monitor)
 {
-	int lines_c = count_lines(fp);
+	int lines_c;
+	if (is_verbose) {
+		lines_c = count_lines(fp);
+		rewind(fp);
+	}
 	printf("Start parse log...\n");
-	rewind(fp);
 	user_table_t *table;
 	struct log_entry entry;
 	char *url;
@@ -217,6 +221,8 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	other_url = "other";
 	int count_sites = 0;
 	char **sites = getsites(monitor);
+	char *tcp_miss = "TCP_MISS";
+	char *get = "GET";
 	int lines;
 
 	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
@@ -230,6 +236,13 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	while (read_record(fp, &entry) == 0) {
 		lines++;
 
+		entry.head_st[8] = '\0';
+
+		printf("%s %s", entry.head_st, entry.method);
+		if (strcmp(entry.head_st, tcp_miss) == 0 && strcmp(entry.method, get) == 0)
+			printf("\tOK");
+		printf("\n");
+	
 		url = chop_lvl2_domain(cut_site(entry.uri));
 		if (!is_exist_elem(url, sites, count_sites))
 			url = other_url;
@@ -241,13 +254,8 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 			progress(lines_c, lines);
 		}
 	}
-	if (is_verbose) {
+	if (is_verbose)
 		printf("\n");
-	}
-
-#if IS_DEBUG > 0
-	user_table_list(table);
-#endif
 
 //	user_table_list(table);
 
@@ -265,7 +273,7 @@ read_record(FILE *fp, struct log_entry *entry)
 	int ret;
 	int seconds;
 
-	ret = fscanf(fp, "%d.%d %d"
+/*	ret = fscanf(fp, "%d.%d %d"
 	    "%" TO_STR(IP_MAXLEN) "s "
 	    "%" TO_STR(HEAD_ST_MAXLEN) "s "
 	    "%d "
@@ -275,7 +283,25 @@ read_record(FILE *fp, struct log_entry *entry)
 	    &entry->time, &seconds, &entry->elaps,
 	    entry->ipaddr, entry->head_st, &entry->len,
 	    entry->method, entry->uri, entry->username
-	    );
+	    );*/
+
+	ret = fscanf(fp, "%d.%d | %d | "
+            "%" TO_STR(IP_MAXLEN) "s | "
+            "%" TO_STR(HEAD_ST_MAXLEN) "s | "
+            "%d | "
+            "%" TO_STR(METHOD_MAXLEN) "s | "
+            "%" TO_STR(URI_MAXLEN) "s | "
+            "%" TO_STR(USERNAME_MAXLEN) "s | "
+            "%" TO_STR(SH_MAXLEN) "s | "
+            "%" TO_STR(TYPE_MAXLEN) "s | "
+            "%d | "
+            "%" TO_STR(USERAGENT_MAXLEN) "s | "
+            "%" TO_STR(REFERER_MAXLEN) "s"
+            &entry->time, &seconds, &entry->elaps,
+            entry->ipaddr, entry->head_st, &entry->len,
+            entry->method, entry->uri, entry->username,
+	    entry->sh, entry->type, entry->port, entry->useragent,
+	    entry->referer);
 
 	//skip to next line
 	while ((code = fgetc(fp)) != '\n') {
