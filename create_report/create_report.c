@@ -125,21 +125,23 @@ main(int argc, char* argv[])
 		exit(1);
 	}
 
-	if (csvfile == NULL) {
-		csvfile = "test.csv";
+	if (monitor == NULL){
+		warning("You must specifie sites for monitoring\n");
+		get_help();
+		exit(1);
+	}
+	
+	if (is_verbose) {
+		printf("LOG file: %s\n", logfile);
+		printf("CSV file: %s\n", csvfile);
+		printf("Monitor sites: %s\n", monitor);
 	}
 
-	if (monitor == NULL){
-		monitor = "monitor_sites.list";
-	}
-	
-	printf("LOG file: %s\n", logfile);
-	printf("CSV file: %s\n", csvfile);
-	printf("Monitor sites: %s\n", monitor);
-	
 	parse_log(fp, csvfile, monitor);
 
-	printf("DONE!\n");
+	if (is_verbose)
+		printf("DONE!\n");
+
 	return 0;
 }
 
@@ -230,8 +232,9 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	if (is_verbose) {
 		lines_c = count_lines(fp);
 		rewind(fp);
+		printf("Start parse log...\n");
 	}
-	printf("Start parse log...\n");
+
 	user_table_t *table;
 	struct log_entry entry;
 	char *url;
@@ -279,8 +282,10 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	if (is_verbose)
 		printf("\n");
 
-	user_table_write_csv(table, sites, csvfile);	
-
+	if (csvfile != NULL)
+		user_table_write_csv(table, sites, csvfile);	
+	else
+		user_table_print(table, sites);
 	free (sites);
 
 	user_table_del(&table);

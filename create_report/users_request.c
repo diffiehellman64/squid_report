@@ -95,8 +95,8 @@ user_table_add_entry(user_table_t *table, char *uname, char *site)
 	user_item_add_site(tmp, site);
 }
 
-void
-user_table_list(user_table_t *table)
+/*void
+user_table_print(user_table_t *table)
 {
 	void *key, *data;
 	struct hash_table_iter *iter;
@@ -121,13 +121,64 @@ user_table_list(user_table_t *table)
 	}
 
 	hash_table_iterate_deinit(&iter);
+}*/
+
+void
+user_table_print(user_table_t *table, char **sites)
+{
+        void *key, *data;
+        struct hash_table_iter *iter;
+	int site_count;
+	int i = 0;
+	int line_s[100];	
+
+        iter = hash_table_iterate_init(table);
+
+	printf("user;");
+	while (sites[i] != NULL) {
+		printf("%s;", sites[i]);
+		line_s[i] = 0;
+		++i;
+	}
+	site_count = i;
+
+	printf("\n");
+	
+        while (hash_table_iterate(iter, &key, &data) != FALSE) {
+                void *key2, *data2;
+                struct hash_table_iter *iter2;
+                struct user_item *item = data;
+
+                iter2 = hash_table_iterate_init(item->site_requests);
+                printf("%s;", item->uname);
+        	while (hash_table_iterate(iter2, &key2, &data2) != FALSE) {
+			i = 0;
+			while (sites[i] != NULL) {
+	                	struct site_item *item2 = data2;
+				if (strcmp(sites[i], item2->site) == 0) {
+					line_s[i] = item2->n;
+					break;
+				}
+				++i;
+			}
+		}
+
+                for (i = 0; i < site_count ; i++){
+			printf("%d;", line_s[i]);
+                        line_s[i] = 0;
+                }
+
+		printf("\n");
+                hash_table_iterate_deinit(&iter2);
+        }
+	
+        hash_table_iterate_deinit(&iter);
 }
 
 void
 user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 {
 	printf("Creating CSV file...\n");
-//	printf("%d - %d\n", time_h, time_l);
 	FILE *fp;
         void *key, *data;
         struct hash_table_iter *iter;
@@ -160,14 +211,12 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 
                 iter2 = hash_table_iterate_init(item->site_requests);
                 fprintf(fp, "%s;", item->uname);
-		DEBUG(LOG_VERBOSE, "%s;", item->uname);
         	while (hash_table_iterate(iter2, &key2, &data2) != FALSE) {
 			i = 0;
 			while (sites[i] != NULL) {
 	                	struct site_item *item2 = data2;
 				if (strcmp(sites[i], item2->site) == 0) {
 					line_s[i] = item2->n;
-					DEBUG(LOG_VERBOSE, "%d;", item2->n);
 					break;
 				}
 				++i;
@@ -180,7 +229,6 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
                 }
 
 		fprintf(fp, "\n");
-		DEBUG(LOG_VERBOSE, "\n");
                 hash_table_iterate_deinit(&iter2);
         }
 	
