@@ -27,8 +27,8 @@
 #define	URI_MAXLEN 8192
 #define	USERNAME_MAXLEN 128
 #define ORGNAME_MAXLEN 128
-#define SH_MAXLEN 128
-#define TYPE_MAXLEN 128
+#define HSTATUS_MAXLEN 128
+#define MIMETYPE_MAXLEN 128
 #define USERAGENT_MAXLEN 512
 #define REFERER_MAXLEN 8192
 
@@ -41,20 +41,26 @@ struct log_entry {
 	char method[METHOD_MAXLEN];
 	char uri[URI_MAXLEN];
 	char username[USERNAME_MAXLEN];
+	char h_status[HSTATUS_MAXLEN];
+	char mime_type[MIMETYPE_MAXLEN];
+	int port;
+	char user_agent[USERAGENT_MAXLEN];
+	char referer[REFERER_MAXLEN];
 };
 
 void parse_log(FILE *fp, char *csvfile, char *monitor);
-int read_record(FILE *fp, struct log_entry *entry);
-
+void progress(int global, int curent);
 char *chop_uname(char *uname);
 char *chop_domain(char *uri);
 char *chop_lvl2_domain(char *domname);
-//diff added
 char *cut_site(char *site);
 char **getsites(char* filename);
 int exist_elem (char *elem, char **array, int elem_count);
 int count_lines (FILE *fp);
-void progress(int global, int curent);
+int read_record(FILE *fp, struct log_entry *entry);
+
+//static int time_l = 0;
+//static int time_h = 9999999999;
 
 void
 usage_and_die(char *pname)
@@ -63,9 +69,20 @@ usage_and_die(char *pname)
 	exit(1);
 }
 
+void
+get_help()
+{
+	printf("\nSQUID REPORT GENERATOR\n\n");
+	printf("Use:\n");
+	printf("-l\tlogfile\n");
+	printf("-m\tmonitoring sites list file\n");
+	printf("-o\toutput file for csv format\n");
+	printf("-v\tverbose mod");
+	printf("\n\n");
+}
 //Напиши обработчик опций чтобы можно было включать/отключать болтливый режим,
 //выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
-#define N_LINES 10000
+#define N_LINES 1000
 int is_verbose = 0;
 
 int
@@ -77,7 +94,7 @@ main(int argc, char* argv[])
 	char *csvfile = NULL;
 	char *monitor = NULL;
 	
-	while ( (rez = getopt(argc,argv,"l:o:m:v")) != -1){
+	while ( (rez = getopt(argc,argv,"l:o:m:vh")) != -1){
 		switch (rez){
 			case 'l': 
 				logfile = optarg;	
@@ -92,6 +109,9 @@ main(int argc, char* argv[])
 				printf("VERBOSE MOD!\n");
 				is_verbose = 1; 
 				break;
+			case 'h': 
+				get_help(); 
+				exit(0);
 			case '?': 
 				printf("Error found !\n");
 				break;
@@ -101,6 +121,7 @@ main(int argc, char* argv[])
         fp = fopen(logfile, "r");
 	if (fp == NULL) {
 		warning("Can't open logfile\n");
+		get_help();
 		exit(1);
 	}
 
@@ -115,7 +136,6 @@ main(int argc, char* argv[])
 	printf("LOG file: %s\n", logfile);
 	printf("CSV file: %s\n", csvfile);
 	printf("Monitor sites: %s\n", monitor);
-//	printf("Lines: %d\n", count_line(logfile));
 	
 	parse_log(fp, csvfile, monitor);
 
@@ -127,16 +147,14 @@ int
 count_lines (FILE *fp)
 {
 	printf ("Counting lines...\n");
-	int i = 0;
-	int sz;
-	char *buff;
-	buff = NULL;
-	while(getline(&buff, &sz, fp) > 0) {
-		buff = NULL;
-		++i;
+	char ch;
+	int lines = 0;
+	while ((ch = fgetc(fp)) != EOF) {
+    		if (ch=='\n')
+        		++lines;
 	}
-	printf("Lines: %d\n", i);
-	return i;	
+	printf("Lines: %d\n", lines); 
+	return lines;	
 }
 
 char **
@@ -202,13 +220,13 @@ progress(int global, int curent)
 			printf(".");
 	}
 	printf("]\t");
-	printf("\t%3.2f%%", proc*100);
+	printf("\t%.2f%%", proc*100);
 }
 
 void
 parse_log(FILE *fp, char *csvfile, char *monitor)
 {
-	int lines_c;
+	int lines_c = 0;
 	if (is_verbose) {
 		lines_c = count_lines(fp);
 		rewind(fp);
@@ -223,6 +241,8 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	char **sites = getsites(monitor);
 	char *tcp_miss = "TCP_MISS";
 	char *get = "GET";
+	char *type = "text/html";
+	char *referer = "-";
 	int lines;
 
 	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
@@ -235,29 +255,29 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 
 	while (read_record(fp, &entry) == 0) {
 		lines++;
-
 		entry.head_st[8] = '\0';
-
-		printf("%s %s", entry.head_st, entry.method);
-		if (strcmp(entry.head_st, tcp_miss) == 0 && strcmp(entry.method, get) == 0)
-			printf("\tOK");
-		printf("\n");
-	
-		url = chop_lvl2_domain(cut_site(entry.uri));
-		if (!is_exist_elem(url, sites, count_sites))
-			url = other_url;
-		user_table_add_entry(table,
-		    chop_uname(entry.username),
-		    url);
-
+	//	printf("|%s| |%s| |%s|", entry.head_st, entry.method, entry.mime_type);
+/*if (time_h > entry.time) {
+			time_h = entry.time;	
+		}
+		if (time_l < entry.time) {
+			time_l = entry.time;	
+		} */
+//		printf("%d - %d\n", time_h, time_l);
+		if (strcmp(entry.head_st, tcp_miss) == 0 && strcmp(entry.method, get) == 0 && strcmp(entry.mime_type, type) == 0 && strcmp(entry.referer, referer) == 0) {
+			url = chop_lvl2_domain(cut_site(entry.uri));
+			if (!is_exist_elem(url, sites, count_sites))
+				url = other_url;
+			user_table_add_entry(table,
+			    chop_uname(entry.username),
+			    url);
+			}
 		if (is_verbose && lines % N_LINES == 0) {
 			progress(lines_c, lines);
 		}
 	}
 	if (is_verbose)
 		printf("\n");
-
-//	user_table_list(table);
 
 	user_table_write_csv(table, sites, csvfile);	
 
@@ -272,36 +292,31 @@ read_record(FILE *fp, struct log_entry *entry)
 	int code;
 	int ret;
 	int seconds;
-
-/*	ret = fscanf(fp, "%d.%d %d"
-	    "%" TO_STR(IP_MAXLEN) "s "
-	    "%" TO_STR(HEAD_ST_MAXLEN) "s "
-	    "%d "
-	    "%" TO_STR(METHOD_MAXLEN) "s "
-	    "%" TO_STR(URI_MAXLEN) "s "
-	    "%" TO_STR(USERNAME_MAXLEN) "s ",
-	    &entry->time, &seconds, &entry->elaps,
-	    entry->ipaddr, entry->head_st, &entry->len,
-	    entry->method, entry->uri, entry->username
-	    );*/
-
-	ret = fscanf(fp, "%d.%d | %d | "
-            "%" TO_STR(IP_MAXLEN) "s | "
-            "%" TO_STR(HEAD_ST_MAXLEN) "s | "
-            "%d | "
-            "%" TO_STR(METHOD_MAXLEN) "s | "
-            "%" TO_STR(URI_MAXLEN) "s | "
-            "%" TO_STR(USERNAME_MAXLEN) "s | "
-            "%" TO_STR(SH_MAXLEN) "s | "
-            "%" TO_STR(TYPE_MAXLEN) "s | "
-            "%d | "
-            "%" TO_STR(USERAGENT_MAXLEN) "s | "
-            "%" TO_STR(REFERER_MAXLEN) "s"
-            &entry->time, &seconds, &entry->elaps,
-            entry->ipaddr, entry->head_st, &entry->len,
-            entry->method, entry->uri, entry->username,
-	    entry->sh, entry->type, entry->port, entry->useragent,
-	    entry->referer);
+	ret = fscanf(fp, 
+		"%d.%d | %d | "
+		"%" TO_STR(IP_MAXLEN) "s | "
+		"%" TO_STR(HEAD_ST_MAXLEN) "s | "
+		"%d | "
+		"%" TO_STR(METHOD_MAXLEN) "s | "
+		"%" TO_STR(URI_MAXLEN) "s | "
+		"%" TO_STR(USERNAME_MAXLEN) "s | "
+		"%" TO_STR(HSTATUS_MAXLEN) "s | "
+		"%" TO_STR(MIMETYPE_MAXLEN) "s | "
+		"%d | "
+		"%" TO_STR(USERAGENT_MAXLEN) "s | "
+		"%" TO_STR(REFERER_MAXLEN) "s",
+            	&entry->time, &seconds, &entry->elaps,
+		entry->ipaddr,
+		entry->head_st,
+		&entry->len,
+		entry->method,
+		entry->uri,
+		entry->username,
+		entry->h_status,
+		entry->mime_type,
+		&entry->port,
+		entry->user_agent,
+		entry->referer);
 
 	//skip to next line
 	while ((code = fgetc(fp)) != '\n') {

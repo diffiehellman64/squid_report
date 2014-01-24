@@ -127,6 +127,7 @@ void
 user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 {
 	printf("Creating CSV file...\n");
+//	printf("%d - %d\n", time_h, time_l);
 	FILE *fp;
         void *key, *data;
         struct hash_table_iter *iter;
