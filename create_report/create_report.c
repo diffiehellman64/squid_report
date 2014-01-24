@@ -90,7 +90,7 @@ main(int argc, char* argv[])
 {
 	int rez=0;
 	FILE *fp;
-	char *logfile;
+	char *logfile = NULL;
 	char *csvfile = NULL;
 	char *monitor = NULL;
 	
@@ -119,11 +119,6 @@ main(int argc, char* argv[])
 	};
 
         fp = fopen(logfile, "r");
-	if (fp == NULL) {
-		warning("Can't open logfile\n");
-		get_help();
-		exit(1);
-	}
 
 	if (monitor == NULL){
 		warning("You must specifie sites for monitoring\n");
@@ -137,7 +132,8 @@ main(int argc, char* argv[])
 		printf("Monitor sites: %s\n", monitor);
 	}
 
-	parse_log(fp, csvfile, monitor);
+	if (fp != NULL)
+		parse_log(fp, csvfile, monitor);
 
 	if (is_verbose)
 		printf("DONE!\n");
@@ -259,14 +255,6 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	while (read_record(fp, &entry) == 0) {
 		lines++;
 		entry.head_st[8] = '\0';
-	//	printf("|%s| |%s| |%s|", entry.head_st, entry.method, entry.mime_type);
-/*if (time_h > entry.time) {
-			time_h = entry.time;	
-		}
-		if (time_l < entry.time) {
-			time_l = entry.time;	
-		} */
-//		printf("%d - %d\n", time_h, time_l);
 		if (strcmp(entry.head_st, tcp_miss) == 0 && strcmp(entry.method, get) == 0 && strcmp(entry.mime_type, type) == 0 && strcmp(entry.referer, referer) == 0) {
 			url = chop_lvl2_domain(cut_site(entry.uri));
 			if (!is_exist_elem(url, sites, count_sites))
@@ -279,6 +267,7 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 			progress(lines_c, lines);
 		}
 	}
+
 	if (is_verbose)
 		printf("\n");
 
@@ -286,6 +275,7 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 		user_table_write_csv(table, sites, csvfile);	
 	else
 		user_table_print(table, sites);
+
 	free (sites);
 
 	user_table_del(&table);
