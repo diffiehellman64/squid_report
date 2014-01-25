@@ -48,7 +48,8 @@ struct log_entry {
 	char referer[REFERER_MAXLEN];
 };
 
-void parse_log(FILE *fp, char *csvfile, char *monitor);
+void process_args(int argc, char **argv);
+void parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites);
 void parse_input(char *csvfile, char *monitor);
 void progress(int global, int curent);
 char *chop_uname(char *uname);
@@ -77,17 +78,16 @@ get_help()
 
 #define N_LINES 1000
 int is_verbose = 0;
+char *csvfile = NULL;
+char *monitor = NULL;
 
 int
 main(int argc, char* argv[])
 {
-	int rez=0;
-	FILE *fp;
-	char *csvfile = NULL;
-	char *monitor = NULL;
+	int res;
 	
-	while ( (rez = getopt(argc,argv,"l:o:m:vh")) != -1){
-		switch (rez){
+	while ((res = getopt(argc,argv,"l:o:m:vh")) != -1){
+		switch (res) {
 		case 'o': 
 			csvfile = optarg;
 			break;
@@ -119,9 +119,30 @@ main(int argc, char* argv[])
 		printf("Monitor sites: %s\n", monitor);
 	}
 
+	process_args(argc, argv);
+
+	return 0;
+}
+
+void
+process_args(int argc, char **argv)
+{
+	FILE *fp;
+	char **sites;
+	int n;
+	user_table_t *table;
+       
+	sites = getsites(monitor);
+	for (n = 0; n <= N_MONITOR_SITES; ++n) {
+		if (sites[n] == NULL)
+			break;
+	}
+
+	table = user_table_new();
+
 	if (argc == 0) {
-		parse_log(stdin, csvfile, monitor);
-		return 0;
+		parse_log(stdin, table, sites, n);
+		goto end;
 	}
 
 	while (argc--) {
@@ -132,14 +153,22 @@ main(int argc, char* argv[])
 			continue;
 		}
 
-		parse_log(fp, csvfile, monitor);
+		parse_log(fp, table, sites, n);
 		fclose(fp);
 	}
 
+end:
 	if (is_verbose)
 		printf("DONE!\n");
 
-	return 0;
+	if (csvfile != NULL)
+		user_table_write_csv(table, sites, csvfile);	
+	else
+		user_table_print(table, sites);
+
+	free (sites);
+
+	user_table_del(&table);
 }
 
 int
@@ -159,6 +188,10 @@ count_lines (FILE *fp)
 	return lines;	
 }
 
+//FIXME: может попытаться писать за границы массив
+//FIXME: не очищается память, выделенная getline,
+// более того не понятно как её чистить если последний элемент массива это
+// указатель на константу.
 char **
 getsites(char* filename)
 {
@@ -168,6 +201,7 @@ getsites(char* filename)
 	ssize_t read;
 	char** result;
 	int i = 0;
+
 	result = malloc(N_MONITOR_SITES * sizeof(char*));
 	memset(result, 0, N_MONITOR_SITES * sizeof(char*));
 
@@ -195,10 +229,12 @@ int
 is_exist_elem (char *elem, char **array, int elem_count)
 {
 	int i;
+
 	for (i = 0; i < elem_count; i++) {
 		if (strcmp(array[i], elem) == 0)
 			return TRUE;
 	}
+
 	return FALSE;
 }
 
@@ -208,10 +244,11 @@ progress(int global, int curent)
 	int i;
 	float j;
 	float d = 50;
-//	printf("\033[1A");
 	float proc;
 	float g = (float) global;
 	float c = (float) curent;
+
+//	printf("\033[1A");
 	proc = c/g;
 	j = proc * d ;
 	printf("\r[");
@@ -222,21 +259,19 @@ progress(int global, int curent)
 			printf(".");
 	}
 	printf("]\t");
-	printf("\t%.2f%%", proc*100);
+	printf("\t%.2f%%", proc * 100);
 }
 
 void
-parse_log(FILE *fp, char *csvfile, char *monitor)
+parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 {
 	int lines_c = 0;
-	user_table_t *table;
 	struct log_entry entry;
 	char *url;
 	char *other_url;
-	other_url = "other";
-	int count_sites = 0;
-	char **sites = getsites(monitor);
 	int lines;
+
+	other_url = "other";
 
 	if (is_verbose && fp) {
 		lines_c = count_lines(fp);
@@ -246,13 +281,7 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	if (is_verbose) {
 		printf("Start parse log...\n");
 	}
-
-	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
-		if (sites[count_sites] == NULL)
-			break;
-	}
 	
-	table = user_table_new();
 	lines = 0;
 
 	while (read_record(fp, &entry) == 0) {
@@ -273,18 +302,6 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 			progress(lines_c, lines);
 		}
 	}
-
-	if (is_verbose)
-		printf("\n");
-
-	if (csvfile != NULL)
-		user_table_write_csv(table, sites, csvfile);	
-	else
-		user_table_print(table, sites);
-
-	free (sites);
-
-	user_table_del(&table);
 }
 
 int
