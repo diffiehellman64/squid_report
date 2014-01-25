@@ -89,9 +89,6 @@ main(int argc, char* argv[])
 	
 	while ( (rez = getopt(argc,argv,"l:o:m:vh")) != -1){
 		switch (rez){
-		case 'l': 
-			logfile = optarg;	
-			break; 
 		case 'o': 
 			csvfile = optarg;
 			break;
@@ -109,10 +106,10 @@ main(int argc, char* argv[])
 			exit(0);
         	};
 	};
+	argc -= optind;
+	argv += optind;
 
-        fp = fopen(logfile, "r");
-
-	if (monitor == NULL){
+	if (monitor == NULL) {
 		warning("You need specify sites for monitoring\n");
 		get_help();
 		exit(1);
@@ -124,8 +121,22 @@ main(int argc, char* argv[])
 		printf("Monitor sites: %s\n", monitor);
 	}
 
-	if (fp != NULL)
+	if (argc == 0) {
+		parse_log(stdin, csvfile, monitor);
+		return 0;
+	}
+
+	while (argc--) {
+		fp = fopen(*argv++, "r");
+
+		if (fp == NULL) {
+			DEBUG(LOG_DEFAULT, "fopen error\n");
+			continue;
+		}
+
 		parse_log(fp, csvfile, monitor);
+		fclose(fp);
+	}
 
 	if (is_verbose)
 		printf("DONE!\n");
