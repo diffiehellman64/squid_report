@@ -115,7 +115,10 @@ main(int argc, char* argv[])
 	}
 	
 	if (is_verbose) {
-		printf("CSV file: %s\n", csvfile);
+		if (csvfile)
+			printf("Output CSV file: %s\n", csvfile);
+		else
+			printf("Output: STDOUT\n");
 		printf("Monitor sites: %s\n", monitor);
 	}
 
@@ -146,13 +149,14 @@ process_args(int argc, char **argv)
 	}
 
 	while (argc--) {
+		if (is_verbose)
+			printf ("\n=> Parsing logfile: %s\n", *argv);
 		fp = fopen(*argv++, "r");
 
 		if (fp == NULL) {
 			DEBUG(LOG_DEFAULT, "fopen error\n");
 			continue;
 		}
-
 		parse_log(fp, table, sites, n);
 		fclose(fp);
 	}
@@ -248,18 +252,19 @@ progress(int global, int curent)
 	float g = (float) global;
 	float c = (float) curent;
 
-//	printf("\033[1A");
 	proc = c/g;
-	j = proc * d ;
+	j = proc * d;
 	printf("\r[");
 	for (i = 0; i <= d; ++i) {
-		if (i < j)
+		if (i <= j)
 			printf("#");
 		else
-			printf(".");
+			printf(" ");
 	}
-	printf("]\t");
-	printf("\t%.2f%%", proc * 100);
+	printf("]\t%.2f%%", proc * 100);
+	if (proc >= 1) {
+		printf("\n");
+	}
 }
 
 void
@@ -278,10 +283,6 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 		rewind(fp);
 	}
 
-	if (is_verbose) {
-		printf("Start parse log...\n");
-	}
-	
 	lines = 0;
 
 	while (read_record(fp, &entry) == 0) {
@@ -298,7 +299,7 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 			    chop_uname(entry.username),
 			    url);
 			}
-		if (is_verbose && lines % N_LINES == 0) {
+		if (is_verbose && (lines % N_LINES == 0 || lines == lines_c)) {
 			progress(lines_c, lines);
 		}
 	}
