@@ -76,7 +76,7 @@ get_help()
 	exit(1);
 }
 
-#define N_LINES 1000
+#define N_LINES 10000
 int is_verbose = 0;
 char *csvfile = NULL;
 char *monitor = NULL;
@@ -150,7 +150,7 @@ process_args(int argc, char **argv)
 
 	while (argc--) {
 		if (is_verbose)
-			printf ("\n=> Parsing logfile: %s\n", *argv);
+			printf ("=> Parsing logfile: %s\n", *argv);
 		fp = fopen(*argv++, "r");
 
 		if (fp == NULL) {
