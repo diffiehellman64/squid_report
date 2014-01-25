@@ -57,27 +57,45 @@ function get_org($user){
 
 function parsecsv($csvfile, $out){
 	$handle = @fopen($csvfile, "r");
+        $fp = fopen($out, "w");
+	if ($handle) {
+                while (($buffer = fgets($handle, 4096)) !== false) {
+                        $user = substr($buffer, 0, stripos($buffer, ";"));
+                        if ($user == 'user') {
+                                $line = 'org;fio;'.$buffer;
+                        } else {
+                                $line = get_org($user).";".get_user_fio($user).";".$buffer;
+                        }
+			echo $line;
+                        fputs ($fp, $line);
+                }
+        }
+	if (!feof($handle)) {
+ 		echo "Error: cann`t open csv file\n";
+	}
+	fclose($handle);
+        fclose($fp);
+}
+
+
+function parseinput($out){
 	$fp = fopen($out, "w");
-        if ($handle) {
-		while (($buffer = fgets($handle, 4096)) !== false) {
+		while ($buffer = fgets(STDIN)) {
+		//	echo $buffer;
 			$user = substr($buffer, 0, stripos($buffer, ";"));
 			if ($user == 'user') {
 				$line = 'org;fio;'.$buffer;
 			} else {
 				$line = get_org($user).";".get_user_fio($user).";".$buffer;
 			}
-//			echo $line;
 			fputs ($fp, $line);
+		//	echo $line;
 		}
-	}
-	if (!feof($handle)) {
-        	echo "Error: cann`t open csv file\n";
-	}
-	fclose($handle);
 	fclose($fp);
 }
 
-$csvfile = $argv[1];
+//$csvfile = $argv[1];
 $out = $argv[2];
 $pass = $argv[3];
-parsecsv($csvfile, $out);
+//parsecsv($csvfile, $out);
+parseinput($out);
