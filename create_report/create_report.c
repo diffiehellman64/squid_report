@@ -49,9 +49,9 @@ struct log_entry {
 };
 
 void parse_log(FILE *fp, char *csvfile, char *monitor);
+void parse_input(char *csvfile, char *monitor);
 void progress(int global, int curent);
 char *chop_uname(char *uname);
-char *chop_domain(char *uri);
 char *chop_lvl2_domain(char *domname);
 char *cut_site(char *site);
 char **getsites(char* filename);
@@ -63,13 +63,6 @@ int read_record(FILE *fp, struct log_entry *entry);
 //static int time_h = 9999999999;
 
 void
-usage_and_die(char *pname)
-{
-	printf("%s logfile1 [logfile2 ...]\n", pname);
-	exit(1);
-}
-
-void
 get_help()
 {
 	printf("\nSQUID REPORT GENERATOR\n\n");
@@ -79,9 +72,9 @@ get_help()
 	printf("-o\toutput file for csv format\n");
 	printf("-v\tverbose mod");
 	printf("\n\n");
+	exit(1);
 }
-//Напиши обработчик опций чтобы можно было включать/отключать болтливый режим,
-//выбирать формат вывода, сейчас всё встроено в код что не очень хорошо.
+
 #define N_LINES 1000
 int is_verbose = 0;
 
@@ -98,7 +91,7 @@ main(int argc, char* argv[])
 		switch (rez){
 			case 'l': 
 				logfile = optarg;	
-				break;
+				break; 
 			case 'o': 
 				csvfile = optarg;
 				break;
@@ -111,10 +104,13 @@ main(int argc, char* argv[])
 				break;
 			case 'h': 
 				get_help(); 
-				exit(0);
 			case '?': 
+		//		logfile = optarg;
 				printf("Error found !\n");
 				break;
+		/*	default:
+				logfile = optarg;
+				break; */
         	};
 	};
 
@@ -123,7 +119,6 @@ main(int argc, char* argv[])
 	if (monitor == NULL){
 		warning("You must specifie sites for monitoring\n");
 		get_help();
-		exit(1);
 	}
 	
 	if (is_verbose) {
@@ -225,9 +220,12 @@ void
 parse_log(FILE *fp, char *csvfile, char *monitor)
 {
 	int lines_c = 0;
-	if (is_verbose) {
+	if (is_verbose && fp) {
 		lines_c = count_lines(fp);
 		rewind(fp);
+	}
+
+	if (is_verbose) {
 		printf("Start parse log...\n");
 	}
 
@@ -336,38 +334,6 @@ chop_uname(char *uname)
 	return uname;
 }
 
-//FIXME maybe need to append me
-//func should have bug when uri contains IPv6 address
-char *
-chop_domain(char *uri)
-{
-	int d_s, d_e;
-	char *p;
-
-	d_s = d_e = 0;
-
-	if (strncmp(uri, "http://", 7) == 0)
-		d_s = 7;
-	else if (strncmp(uri, "https://", 8) == 0)
-		d_s = 8;
-	
-	p = strchr(uri + d_s, '/');
-	if (p == NULL)
-		d_e = strlen(uri);
-	else
-		d_e = p - uri;
-
-	//maybe we find port?
-	p = strchr(uri + d_s, ':');
-	if (p != NULL)
-		d_e = MIN(d_e, p - uri);
-
-	memmove(uri, uri + d_s, d_e - d_s);
-	uri[d_e - d_s] = 0;
-
-	return uri;
-}
-
 /*
  * NOTE: we assume that domname is domain name without
  * protocol name or uri path
@@ -400,12 +366,9 @@ chop_lvl2_domain(char *domname)
 	return domname;
 }
 
-//Я написал такую функцию по отчленению домена
-//Мне нужно только домены 2-го уровня, т.е. не sdfsdf.vk.com, а vk.com
 char*
 cut_site(char* site)
 {
-//        char* result;
         int i;
         int point_count = 2;
         for (i = 8; i < strlen(site); ++i) {
@@ -422,9 +385,5 @@ cut_site(char* site)
                         break;
                 }
         }
-//        result = malloc(strlen(site) * sizeof(char *));
-//        result = site;
-//        return result;
-//	memmove(site, site + d_s, d_e - d_s);
 	return site;
 }
