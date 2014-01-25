@@ -80,22 +80,19 @@ function parsecsv($csvfile, $out){
 
 function parseinput($out){
 	$fp = fopen($out, "w");
-		while ($buffer = fgets(STDIN)) {
-		//	echo $buffer;
-			$user = substr($buffer, 0, stripos($buffer, ";"));
-			if ($user == 'user') {
-				$line = 'org;fio;'.$buffer;
-			} else {
-				$line = get_org($user).";".get_user_fio($user).";".$buffer;
-			}
-			fputs ($fp, $line);
-		//	echo $line;
+	while ($buffer = fgets(STDIN)) {
+		$user = substr($buffer, 0, stripos($buffer, ";"));
+		if ($user == 'user') {
+			$line = 'org;fio;'.$buffer;
+		} else {
+			$line = get_org($user).";".get_user_fio($user).";".$buffer;
 		}
+		fputs ($fp, $line);
+	}
 	fclose($fp);
 }
 
-//$csvfile = $argv[1];
-$out = $argv[2];
-$pass = $argv[3];
+$out = $argv[1];
+$pass = $argv[2];
 //parsecsv($csvfile, $out);
 parseinput($out);

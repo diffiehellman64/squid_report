@@ -68,7 +68,6 @@ get_help()
 {
 	printf("\nSQUID REPORT GENERATOR\n\n");
 	printf("Use:\n");
-	printf("-l\tlogfile\n");
 	printf("-m\tmonitoring sites list file\n");
 	printf("-o\toutput file for csv format\n");
 	printf("-v\tverbose mod");
@@ -287,6 +286,9 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 
 	while (read_record(fp, &entry) == 0) {
 		lines++;
+		if (is_verbose && lines == 1){
+			printf ("%d\n", entry.time);
+		}
 		entry.head_st[8] = '\0';
 		if (strcmp(entry.head_st, "TCP_MISS") == 0 &&
 		    strcmp(entry.method, "GET") == 0 &&
@@ -298,9 +300,12 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 			user_table_add_entry(table,
 			    chop_uname(entry.username),
 			    url);
-			}
+		}
 		if (is_verbose && (lines % N_LINES == 0 || lines == lines_c)) {
 			progress(lines_c, lines);
+		}
+		if (lines == lines_c) {
+			printf ("%d\n", entry.time);
 		}
 	}
 }
