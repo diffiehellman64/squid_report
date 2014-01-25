@@ -83,7 +83,6 @@ main(int argc, char* argv[])
 {
 	int rez=0;
 	FILE *fp;
-	char *logfile = NULL;
 	char *csvfile = NULL;
 	char *monitor = NULL;
 	
@@ -116,7 +115,6 @@ main(int argc, char* argv[])
 	}
 	
 	if (is_verbose) {
-		printf("LOG file: %s\n", logfile);
 		printf("CSV file: %s\n", csvfile);
 		printf("Monitor sites: %s\n", monitor);
 	}
