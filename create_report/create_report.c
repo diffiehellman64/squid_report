@@ -55,8 +55,8 @@ char *chop_uname(char *uname);
 char *chop_lvl2_domain(char *domname);
 char *cut_site(char *site);
 char **getsites(char* filename);
-int exist_elem (char *elem, char **array, int elem_count);
-int count_lines (FILE *fp);
+int exist_elem(char *elem, char **array, int elem_count);
+int count_lines(FILE *fp);
 int read_record(FILE *fp, struct log_entry *entry);
 
 //static int time_l = 0;
@@ -89,36 +89,33 @@ main(int argc, char* argv[])
 	
 	while ( (rez = getopt(argc,argv,"l:o:m:vh")) != -1){
 		switch (rez){
-			case 'l': 
-				logfile = optarg;	
-				break; 
-			case 'o': 
-				csvfile = optarg;
-				break;
-			case 'm':
-				monitor = optarg;
-				break;
-			case 'v': 
-				printf("VERBOSE MOD!\n");
-				is_verbose = 1; 
-				break;
-			case 'h': 
-				get_help(); 
-			case '?': 
-		//		logfile = optarg;
-				printf("Error found !\n");
-				break;
-		/*	default:
-				logfile = optarg;
-				break; */
+		case 'l': 
+			logfile = optarg;	
+			break; 
+		case 'o': 
+			csvfile = optarg;
+			break;
+		case 'm':
+			monitor = optarg;
+			break;
+		case 'v': 
+			printf("VERBOSE MOD!\n");
+			is_verbose = 1; 
+			break;
+		case 'h': 
+			get_help(); 
+		default: 
+			printf("Error found !\n");
+			exit(0);
         	};
 	};
 
         fp = fopen(logfile, "r");
 
 	if (monitor == NULL){
-		warning("You must specifie sites for monitoring\n");
+		warning("You need specify sites for monitoring\n");
 		get_help();
+		exit(1);
 	}
 	
 	if (is_verbose) {
@@ -142,11 +139,14 @@ count_lines (FILE *fp)
 	printf ("Counting lines...\n");
 	char ch;
 	int lines = 0;
+
 	while ((ch = fgetc(fp)) != EOF) {
     		if (ch=='\n')
         		++lines;
 	}
+
 	printf("Lines: %d\n", lines); 
+
 	return lines;	
 }
 
@@ -186,7 +186,7 @@ int
 is_exist_elem (char *elem, char **array, int elem_count)
 {
 	int i;
-	for (i=0; i < elem_count; i++) {
+	for (i = 0; i < elem_count; i++) {
 		if (strcmp(array[i], elem) == 0)
 			return TRUE;
 	}
@@ -220,6 +220,15 @@ void
 parse_log(FILE *fp, char *csvfile, char *monitor)
 {
 	int lines_c = 0;
+	user_table_t *table;
+	struct log_entry entry;
+	char *url;
+	char *other_url;
+	other_url = "other";
+	int count_sites = 0;
+	char **sites = getsites(monitor);
+	int lines;
+
 	if (is_verbose && fp) {
 		lines_c = count_lines(fp);
 		rewind(fp);
@@ -228,19 +237,6 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	if (is_verbose) {
 		printf("Start parse log...\n");
 	}
-
-	user_table_t *table;
-	struct log_entry entry;
-	char *url;
-	char *other_url;
-	other_url = "other";
-	int count_sites = 0;
-	char **sites = getsites(monitor);
-	char *tcp_miss = "TCP_MISS";
-	char *get = "GET";
-	char *type = "text/html";
-	char *referer = "-";
-	int lines;
 
 	for (count_sites = 0; count_sites <= N_MONITOR_SITES; ++count_sites) {
 		if (sites[count_sites] == NULL)
@@ -253,7 +249,10 @@ parse_log(FILE *fp, char *csvfile, char *monitor)
 	while (read_record(fp, &entry) == 0) {
 		lines++;
 		entry.head_st[8] = '\0';
-		if (strcmp(entry.head_st, tcp_miss) == 0 && strcmp(entry.method, get) == 0 && strcmp(entry.mime_type, type) == 0 && strcmp(entry.referer, referer) == 0) {
+		if (strcmp(entry.head_st, "TCP_MISS") == 0 &&
+		    strcmp(entry.method, "GET") == 0 &&
+		    strcmp(entry.mime_type, "text/html") == 0 &&
+		    strcmp(entry.referer, "-") == 0) {
 			url = chop_lvl2_domain(cut_site(entry.uri));
 			if (!is_exist_elem(url, sites, count_sites))
 				url = other_url;
