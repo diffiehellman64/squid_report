@@ -165,7 +165,7 @@ end:
 		printf("DONE!\n");
 	}
 
-	printf("Time period;%ld;%ld\n", time_l, time_h);
+//	printf("Time period;%ld;%ld\n", time_l, time_h);
 	
 	if (csvfile != NULL)
 		user_table_write_csv(table, sites, csvfile);	

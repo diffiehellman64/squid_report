@@ -6,7 +6,7 @@
 #include "log.h"
 #include "macros.h"
 #include "users_request.h"
-
+extern long time_h, time_l;
 static struct user_item *user_item_new(char *uname);
 static void user_item_add_site(struct user_item *item, char *site);
 static void user_item_del(struct user_item **item);
@@ -105,7 +105,7 @@ user_table_print(user_table_t *table, char **sites)
 	int line_s[100];	
 
         iter = hash_table_iterate_init(table);
-
+	printf("Time period;%ld;%ld\n", time_l, time_h);
 	printf("user;");
 	while (sites[i] != NULL) {
 		printf("%s;", sites[i]);
@@ -165,6 +165,8 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
         }
 
         iter = hash_table_iterate_init(table);
+
+	fprintf(fp, "Time period;%ld;%ld\n", time_l, time_h);
 
 	fprintf(fp, "user;");
 	while (sites[i] != NULL) {
