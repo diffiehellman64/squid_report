@@ -60,8 +60,8 @@ int exist_elem(char *elem, char **array, int elem_count);
 int count_lines(FILE *fp);
 int read_record(FILE *fp, struct log_entry *entry);
 
-//static int time_l = 0;
-//static int time_h = 9999999999;
+long time_h = 0;
+long time_l = 9999999999;
 
 void
 get_help()
@@ -161,9 +161,11 @@ process_args(int argc, char **argv)
 	}
 
 end:
-	if (is_verbose)
+	if (is_verbose) {
 		printf("DONE!\n");
-
+		printf("%ld - %ld\n", time_l, time_h);
+	}
+	
 	if (csvfile != NULL)
 		user_table_write_csv(table, sites, csvfile);	
 	else
@@ -261,7 +263,7 @@ progress(int global, int curent)
 			printf(" ");
 	}
 	printf("]\t%.2f%%", proc * 100);
-	if (proc >= 1) {
+	if (proc == 1) {
 		printf("\n");
 	}
 }
@@ -286,8 +288,11 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 
 	while (read_record(fp, &entry) == 0) {
 		lines++;
-		if (is_verbose && lines == 1){
-			printf ("%d\n", entry.time);
+		if (entry.time > time_h) {
+			time_h = entry.time;
+		}
+		if (entry.time < time_l) {
+			time_l = entry.time;
 		}
 		entry.head_st[8] = '\0';
 		if (strcmp(entry.head_st, "TCP_MISS") == 0 &&
@@ -303,9 +308,6 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 		}
 		if (is_verbose && (lines % N_LINES == 0 || lines == lines_c)) {
 			progress(lines_c, lines);
-		}
-		if (lines == lines_c) {
-			printf ("%d\n", entry.time);
 		}
 	}
 }

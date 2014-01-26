@@ -95,34 +95,6 @@ user_table_add_entry(user_table_t *table, char *uname, char *site)
 	user_item_add_site(tmp, site);
 }
 
-/*void
-user_table_print(user_table_t *table)
-{
-	void *key, *data;
-	struct hash_table_iter *iter;
-
-	printf("TOTAL:\n");
-
-	iter = hash_table_iterate_init(table);
-	
-	while (hash_table_iterate(iter, &key, &data) != FALSE) {
-		void *key2, *data2;
-		struct hash_table_iter *iter2;
-		struct user_item *item = data;
-
-		iter2 = hash_table_iterate_init(item->site_requests);
-		printf("%s\n", item->uname);
-
-		while (hash_table_iterate(iter2, &key2, &data2) != FALSE) {
-			struct site_item *item2 = data2;
-			printf("\t%s %d\n", item2->site, item2->n);
-		}
-		hash_table_iterate_deinit(&iter2);
-	}
-
-	hash_table_iterate_deinit(&iter);
-}*/
-
 void
 user_table_print(user_table_t *table, char **sites)
 {
