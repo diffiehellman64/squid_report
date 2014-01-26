@@ -84,6 +84,9 @@ function parseinput($out){
 		$user = substr($buffer, 0, stripos($buffer, ";"));
 		if ($user == 'user') {
 			$line = 'org;fio;'.$buffer;
+		} else if ($user == 'Time period'){
+			$time = split(";", $buffer);
+			$line = "Time period: " .date("d-m-Y", trim($time[1])). " - " .date("d-m-Y", trim($time[2]))."\n";
 		} else {
 			$line = get_org($user).";".get_user_fio($user).";".$buffer;
 		}

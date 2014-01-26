@@ -150,7 +150,7 @@ user_table_print(user_table_t *table, char **sites)
 void
 user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 {
-	printf("Creating CSV file...\n");
+	printf("Creating CSV file...");
 	FILE *fp;
         void *key, *data;
         struct hash_table_iter *iter;
@@ -206,6 +206,7 @@ user_table_write_csv(user_table_t *table, char **sites, char *csvfile)
 	
         hash_table_iterate_deinit(&iter);
 	fclose(fp);
+	printf("\tdone!\n");
 }
 
 /*

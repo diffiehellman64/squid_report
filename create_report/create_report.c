@@ -163,8 +163,9 @@ process_args(int argc, char **argv)
 end:
 	if (is_verbose) {
 		printf("DONE!\n");
-		printf("%ld - %ld\n", time_l, time_h);
 	}
+
+	printf("Time period;%ld;%ld\n", time_l, time_h);
 	
 	if (csvfile != NULL)
 		user_table_write_csv(table, sites, csvfile);	
@@ -188,7 +189,7 @@ count_lines (FILE *fp)
         		++lines;
 	}
 
-	printf("Lines: %d\n", lines); 
+	printf("done!\tLines: %d\n", lines); 
 
 	return lines;	
 }
