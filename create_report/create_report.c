@@ -296,10 +296,10 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 			time_l = entry.time;
 		}
 		entry.head_st[8] = '\0';
-		if (strcmp(entry.head_st, "TCP_MISS") == 0 &&
-		    strcmp(entry.method, "GET") == 0 &&
-		    strcmp(entry.mime_type, "text/html") == 0 &&
-		    strcmp(entry.referer, "-") == 0) {
+		if (strcmp(entry.head_st, "TCP_MISS") == 0
+		    && strcmp(entry.method, "GET") == 0
+		    && strcmp(entry.mime_type, "text/html") == 0) {
+//		    && strcmp(entry.referer, "-") == 0) {
 			url = chop_lvl2_domain(cut_site(entry.uri));
 			if (!is_exist_elem(url, sites, count_sites))
 				url = other_url;
