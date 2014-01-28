@@ -277,7 +277,7 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 	char *url;
 	char *other_url;
 	int lines;
-
+	char *referer;
 	other_url = "other";
 
 	if (is_verbose && fp) {
@@ -296,11 +296,12 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 			time_l = entry.time;
 		}
 		entry.head_st[8] = '\0';
+		url = chop_lvl2_domain(cut_site(entry.uri));
+		referer = chop_lvl2_domain(cut_site(entry.referer));
 		if (strcmp(entry.head_st, "TCP_MISS") == 0
 		    && strcmp(entry.method, "GET") == 0
-		    && strcmp(entry.mime_type, "text/html") == 0) {
-//		    && strcmp(entry.referer, "-") == 0) {
-			url = chop_lvl2_domain(cut_site(entry.uri));
+		    && strcmp(entry.mime_type, "text/html") == 0
+		    && (strcmp(referer, "-") == 0 || strcmp(referer, url) == 0)) {
 			if (!is_exist_elem(url, sites, count_sites))
 				url = other_url;
 			user_table_add_entry(table,
@@ -330,8 +331,8 @@ read_record(FILE *fp, struct log_entry *entry)
 		"%" TO_STR(HSTATUS_MAXLEN) "s | "
 		"%" TO_STR(MIMETYPE_MAXLEN) "s | "
 		"%d | "
-		"%" TO_STR(USERAGENT_MAXLEN) "s | "
-		"%" TO_STR(REFERER_MAXLEN) "s",
+		"%" TO_STR(REFERER_MAXLEN) "s | "
+		"%" TO_STR(USERAGENT_MAXLEN) "s",
             	&entry->time, &seconds, &entry->elaps,
 		entry->ipaddr,
 		entry->head_st,
@@ -342,8 +343,8 @@ read_record(FILE *fp, struct log_entry *entry)
 		entry->h_status,
 		entry->mime_type,
 		&entry->port,
-		entry->user_agent,
-		entry->referer);
+		entry->referer,
+		entry->user_agent);
 
 	//skip to next line
 	while ((code = fgetc(fp)) != '\n') {
