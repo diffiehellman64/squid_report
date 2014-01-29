@@ -296,8 +296,9 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 			time_l = entry.time;
 		}
 		entry.head_st[8] = '\0';
-		url = chop_lvl2_domain(cut_site(entry.uri));
+		url 	= chop_lvl2_domain(cut_site(entry.uri));
 		referer = chop_lvl2_domain(cut_site(entry.referer));
+//		printf("%s\n", referer);
 		if (strcmp(entry.head_st, "TCP_MISS") == 0
 		    && strcmp(entry.method, "GET") == 0
 		    && strcmp(entry.mime_type, "text/html") == 0
@@ -317,9 +318,13 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 int
 read_record(FILE *fp, struct log_entry *entry)
 {
-	int code;
+	char ch;
+	char buffer[REFERER_MAXLEN];
+	char *referer;
 	int ret;
+	int i = 0;
 	int seconds;
+	int c = 0;
 	ret = fscanf(fp, 
 		"%d.%d | %d | "
 		"%" TO_STR(IP_MAXLEN) "s | "
@@ -330,9 +335,7 @@ read_record(FILE *fp, struct log_entry *entry)
 		"%" TO_STR(USERNAME_MAXLEN) "s | "
 		"%" TO_STR(HSTATUS_MAXLEN) "s | "
 		"%" TO_STR(MIMETYPE_MAXLEN) "s | "
-		"%d | "
-		"%" TO_STR(REFERER_MAXLEN) "s | "
-		"%" TO_STR(USERAGENT_MAXLEN) "s",
+		"%d | ",
             	&entry->time, &seconds, &entry->elaps,
 		entry->ipaddr,
 		entry->head_st,
@@ -342,16 +345,20 @@ read_record(FILE *fp, struct log_entry *entry)
 		entry->username,
 		entry->h_status,
 		entry->mime_type,
-		&entry->port,
-		entry->referer,
-		entry->user_agent);
-
-	//skip to next line
-	while ((code = fgetc(fp)) != '\n') {
-		if (code == EOF)
+		&entry->port);
+        while ((ch = fgetc(fp)) != '\n') {
+		if (ch == EOF)
 			return -1;
-	}
-
+		if (ch == '|') {
+			c = 1;
+		} 
+		if (c == 1) {
+			buffer[i++] = ch;
+		}
+        }
+	buffer[i] = '\0';
+	referer = buffer + 2;
+	strcpy(entry->referer, referer);
 	if (ret < 2)
 		return 1;
 
