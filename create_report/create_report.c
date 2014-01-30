@@ -77,6 +77,7 @@ get_help()
 
 #define N_LINES 10000
 int is_verbose = 0;
+int is_debug = 0;
 char *csvfile = NULL;
 char *monitor = NULL;
 
@@ -85,7 +86,7 @@ main(int argc, char* argv[])
 {
 	int res;
 	
-	while ((res = getopt(argc,argv,"l:o:m:vh")) != -1){
+	while ((res = getopt(argc,argv,"l:o:m:vdh")) != -1){
 		switch (res) {
 		case 'o': 
 			csvfile = optarg;
@@ -96,6 +97,10 @@ main(int argc, char* argv[])
 		case 'v': 
 			printf("VERBOSE MOD!\n");
 			is_verbose = 1; 
+			break;
+		case 'd': 
+			printf("DEBUG MOD!\n");
+			is_debug = 1; 
 			break;
 		case 'h': 
 			get_help(); 
@@ -298,8 +303,9 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 		entry.head_st[8] = '\0';
 		url 	= chop_lvl2_domain(cut_site(entry.uri));
 		referer = chop_lvl2_domain(cut_site(entry.referer));
-//		printf("|%s|\n", url);
-//		printf("|%s|\n", referer);
+		if (is_debug) {
+			printf("url = |%s|\nref = |%s|\n", url, referer);
+		}
 		if (strcmp(entry.head_st, "TCP_MISS") == 0
 		    && strcmp(entry.method, "GET") == 0
 		    && strcmp(entry.mime_type, "text/html") == 0
@@ -356,7 +362,8 @@ read_record(FILE *fp, struct log_entry *entry)
 		} 
         }
 	buffer[i] = '\0';
-//	printf("%s\n", buffer + 1);
+	if (is_debug)
+		printf("buffer = %s\n", buffer + 1);
 	strncpy(entry->referer, buffer + 1, REFERER_MAXLEN);
 	if (ret < 2)
 		return 1;

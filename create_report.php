@@ -200,7 +200,21 @@ function get_time_pool($time){
 }
 
 function get_result($logfile){
-	global $users;
+	$handle = @fopen("$logfile", "r");
+	if ($handle) {
+		while (($buffer = fgets($handle, 4096)) !== false) {
+			$tmp = split('"', trim($buffer));
+			if (isset($tmp[2])) {
+				$referer =  trim($tmp[2]);	
+				$tmp2 = preg_split("/ *\| */", trim($tmp[0]));
+			} else {
+				$tmp2 = preg_split("/ +/",$buffer);	
+			}
+//			$tmp = preg_split('/(( +\| +)|( +)|( ?\"))/', trim($buffer));
+			print_r($tmp2);
+		}
+	}
+/*	global $users;
 	global $monitor;
         global $show_prg;
 	global $time_str;
@@ -251,63 +265,8 @@ function get_result($logfile){
         		echo "Error: unexpected fgets() fail\n";
 		}
 		fclose($handle);
-	}
-	return $result;
-}
-
-function get_global_result($logfile){
-        global $monitor;
-	global $show_prg;
-	$show_prg = 0;
-	$count = exec("wc -l $logfile");
-	$count = split(' ', $count);
-        $result = array();
-        $urls = array();
-	$current_line = 1;
-        $handle = @fopen($logfile, "r");
-        if ($handle) {
-                while (($buffer = fgets($handle, 4096)) !== false) {
-			$current_line++;			
-			show_progress($count[0], $current_line);
-                        $tmp = split('"', $buffer);
-                        $l = trim($tmp[0]);
-                        $line = preg_split('/ +/', $l);
-                        preg_match('/^([^@]+)/', $line[7], $matches);
-                        $user = $matches[1];
-                        $url = get_clen_baseurl($line[6]);
-			if ($user == '-' || $user == 'none'){
-				$org = 'NONE';
-			} else {
-				$org = get_org_from_cache($user, 'users.cache');
-				if (!$org){
-					$org = get_org($user);
-					add_cache('users.cache', "$user|$org\n");
-				}
-			}
-                        if (!in_array($url, $monitor)){
-                        	$url = 'other';
-                        }
-			
-			if (!isset($result[$org])){
-				$result[$org] = array();
-			}
-
-                        if (!isset ($result[$org][$user])){
-                        	$result[$org][$user] = array();
-                        }
-
-                        if (!isset ($result[$org][$user][$url])){
-                        	$result[$org][$user][$url] = 0;
-                        }
-
-                        $result[$org][$user][$url]++;
-                } 
-                if (!feof($handle)) {
-                        echo "Error: unexpected fgets() fail\n";
-                }
-                fclose($handle);
-        }
-        return $result;
+	}*/
+//	return $result;
 }
 
 $input = $argv[1];
@@ -315,6 +274,10 @@ $output = $argv[2];
 $org = $argv[3];
 $pass = $argv[4];
 
+get_result($argv[1]);
+
+
+/*
 if (isset($input) && isset($output) && isset($org)){
 	$monitor = get_sites('monitor_sites.list');
 	echo "Start script...\nInput log file: ".$input."\nOutput csv file: ".$output."\nOrganization: ".$org."\n";
@@ -328,4 +291,4 @@ if (isset($input) && isset($output) && isset($org)){
 	echo "DONE!\n";
 } else {
 	echo "You must use format: inputfile outputfile organization\n";
-}
+}*/
