@@ -298,7 +298,8 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 		entry.head_st[8] = '\0';
 		url 	= chop_lvl2_domain(cut_site(entry.uri));
 		referer = chop_lvl2_domain(cut_site(entry.referer));
-//		printf("%s\n", referer);
+//		printf("|%s|\n", url);
+//		printf("|%s|\n", referer);
 		if (strcmp(entry.head_st, "TCP_MISS") == 0
 		    && strcmp(entry.method, "GET") == 0
 		    && strcmp(entry.mime_type, "text/html") == 0
@@ -320,11 +321,9 @@ read_record(FILE *fp, struct log_entry *entry)
 {
 	char ch;
 	char buffer[REFERER_MAXLEN];
-	char *referer;
 	int ret;
 	int i = 0;
 	int seconds;
-	int c = 0;
 	ret = fscanf(fp, 
 		"%d.%d | %d | "
 		"%" TO_STR(IP_MAXLEN) "s | "
@@ -349,16 +348,16 @@ read_record(FILE *fp, struct log_entry *entry)
         while ((ch = fgetc(fp)) != '\n') {
 		if (ch == EOF)
 			return -1;
+		buffer[i++] = ch;
 		if (ch == '|') {
-			c = 1;
+			buffer[i - 2] = '\0';
+			i = 0;
+			strncpy(entry->user_agent, buffer, USERAGENT_MAXLEN);
 		} 
-		if (c == 1) {
-			buffer[i++] = ch;
-		}
         }
 	buffer[i] = '\0';
-	referer = buffer + 2;
-	strcpy(entry->referer, referer);
+//	printf("%s\n", buffer + 1);
+	strncpy(entry->referer, buffer + 1, REFERER_MAXLEN);
 	if (ret < 2)
 		return 1;
 
