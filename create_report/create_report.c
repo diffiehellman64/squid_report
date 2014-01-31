@@ -29,7 +29,7 @@
 #define ORGNAME_MAXLEN 128
 #define HSTATUS_MAXLEN 128
 #define MIMETYPE_MAXLEN 128
-#define USERAGENT_MAXLEN 512
+#define USERAGENT_MAXLEN 2048
 #define REFERER_MAXLEN 8192
 
 struct log_entry {
@@ -59,6 +59,8 @@ char **getsites(char* filename);
 int exist_elem(char *elem, char **array, int elem_count);
 int count_lines(FILE *fp);
 int read_record(FILE *fp, struct log_entry *entry);
+int get_user_agent(FILE *fp, char *buf, int maxsz, char *target);
+int get_referer(FILE *fp, char *buf, int maxsz, char *target);
 
 long time_h = 0;
 long time_l = 9999999999;
@@ -303,9 +305,10 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 		entry.head_st[8] = '\0';
 		url 	= chop_lvl2_domain(cut_site(entry.uri));
 		referer = chop_lvl2_domain(cut_site(entry.referer));
-		if (is_debug) {
+		if (is_debug)
 			printf("url = |%s|\nref = |%s|\n", url, referer);
-		}
+		if (is_debug)
+			printf("url_origin = |%s|\nref_origin = |%s|\n", entry.uri, entry.referer);
 		if (strcmp(entry.head_st, "TCP_MISS") == 0
 		    && strcmp(entry.method, "GET") == 0
 		    && strcmp(entry.mime_type, "text/html") == 0
@@ -323,12 +326,49 @@ parse_log(FILE *fp, user_table_t *table, char **sites, int count_sites)
 }
 
 int
-read_record(FILE *fp, struct log_entry *entry)
+get_user_agent(FILE *fp, char *buf, int maxsz, char *target)
 {
 	char ch;
+	int i = 0;
+	while ((ch = fgetc(fp)) != '|') {
+		if (ch == EOF)
+                        return -1;
+		buf[i++] = ch;
+		if (i == maxsz) {
+			printf("User agent buffer[%d] if full\n", maxsz);
+			printf("\n%s\n", buf);
+			exit(1);
+		}
+	}
+	buf[i] = '\0'; 
+	strncpy(target, buf, maxsz);
+	return 0;
+}
+
+int
+get_referer(FILE *fp, char *buf, int maxsz, char *target)
+{
+        char ch;
+        int i = 0;
+        while ((ch = fgetc(fp)) != '\n') {
+		if (ch == EOF) 
+			return -1;
+                buf[i++] = ch;
+                if (i == maxsz) {
+			printf("Referer buffer[%d] if full\n", maxsz);
+			exit(1);
+                }
+        }
+        buf[i] = '\0';
+	strncpy(target, buf + 1, maxsz);
+        return 0;
+}
+
+int
+read_record(FILE *fp, struct log_entry *entry)
+{
 	char buffer[REFERER_MAXLEN];
 	int ret;
-	int i = 0;
 	int seconds;
 	ret = fscanf(fp, 
 		"%d.%d | %d | "
@@ -351,20 +391,8 @@ read_record(FILE *fp, struct log_entry *entry)
 		entry->h_status,
 		entry->mime_type,
 		&entry->port);
-        while ((ch = fgetc(fp)) != '\n') {
-		if (ch == EOF)
-			return -1;
-		buffer[i++] = ch;
-		if (ch == '|') {
-			buffer[i - 2] = '\0';
-			i = 0;
-			strncpy(entry->user_agent, buffer, USERAGENT_MAXLEN);
-		} 
-        }
-	buffer[i] = '\0';
-	if (is_debug)
-		printf("buffer = %s\n", buffer + 1);
-	strncpy(entry->referer, buffer + 1, REFERER_MAXLEN);
+	if (get_user_agent(fp, buffer, USERAGENT_MAXLEN, entry->user_agent) == -1 || get_referer(fp, buffer, REFERER_MAXLEN, entry->referer) == -1)
+		return -1;
 	if (ret < 2)
 		return 1;
 

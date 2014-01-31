@@ -2,7 +2,7 @@
 function get_user_fio($user){
 	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
-        $ldapuser = 'yav004@RK.LOCAL';
+        $ldapuser = 'squid@RK.LOCAL';
         $ldappass = $pass;
         $ldaptree = "OU=Resources,DC=rk,DC=local";
 
@@ -29,7 +29,7 @@ function get_user_fio($user){
 function get_org($user){
 	global $pass;
         $ldapserver = 'syk-kom8-dc10.rk.local';
-        $ldapuser = 'yav004@RK.LOCAL';
+        $ldapuser = 'squid@RK.LOCAL';
         $ldappass = $pass;
         $ldaptree = "OU=Resources,DC=rk,DC=local";
 
